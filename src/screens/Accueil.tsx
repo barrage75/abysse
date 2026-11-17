@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import bgLab from '../assets/bg-lab.webp'
 import octoLab from '../assets/octo-lab.webp'
+import { preloadScreenAssets } from '../assets/preload'
 import { Flask } from '../components/Flask'
 import type { StoredGameData } from '../game/storage'
 import { useLang } from '../i18n/useLang'
@@ -59,6 +60,10 @@ export function Accueil({
     .reduce((best, [, score]) => Math.max(best, score.score), 0)
   const best = Math.max(levelsBest, dailyBest)
   const [phase, setPhase] = useState<IntroPhase>(() => (introPlayed ? 'static' : 'waiting'))
+
+  useEffect(() => {
+    if (phase !== 'waiting') preloadScreenAssets()
+  }, [phase])
 
   useEffect(() => {
     if (phase !== 'waiting') return

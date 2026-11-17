@@ -28,7 +28,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: var(--abyss) url('../assets/bg-game.webp') center / cover fixed no-repeat;
+  background: var(--abyss);
 }
 
 body::before {
@@ -36,7 +36,9 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(ellipse at 50% 40%, rgba(6, 20, 46, 0.25), rgba(6, 20, 46, 0.7));
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(6, 20, 46, 0.25), rgba(6, 20, 46, 0.7)),
+    url('../assets/bg-game.webp') center / cover no-repeat;
   pointer-events: none;
 }
 
