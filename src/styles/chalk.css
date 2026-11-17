@@ -160,7 +160,8 @@
 
 @media (max-width: 860px) {
   .game-page .game-octo,
-  .game-page .game-octo[data-mood='sad'] { position: fixed; top: auto; bottom: 6px; left: auto; right: 4px; width: 96px; }
+  .game-page .game-octo[data-mood='sad'] { position: absolute; top: calc(100% - 34px); bottom: auto; left: auto; right: 10px; width: 96px; }
+  .game-page { margin-bottom: 90px; }
 }
 
 @media (max-width: 560px) {
