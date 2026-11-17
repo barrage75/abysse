@@ -46,7 +46,7 @@ export function NiveauxGame({
         </div>
       </header>
 
-      {levelUp && <div className="level-up-banner" role="status">NIVEAU SUPÉRIEUR · {level.name}</div>}
+      {levelUp && <div className="level-up-banner" role="status">Niveau supérieur : {level.name} !</div>}
       <section className="game-meta">
         <div><span>Niveau {session.level}</span><strong>{level.name}</strong></div>
         <div><span>Score</span><strong>{session.score}</strong></div>

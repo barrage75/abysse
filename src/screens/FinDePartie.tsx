@@ -1,3 +1,4 @@
+import octo from '../assets/octo.webp'
 import type { GameResult } from './types'
 
 interface FinDePartieProps {
@@ -10,12 +11,13 @@ export function FinDePartie({ result, onReplay, onHome }: FinDePartieProps) {
   return (
     <main className="page-shell result-page">
       <button className="back-button" onClick={onHome}>← Accueil</button>
-      <p className="eyebrow">Fin de partie · {result.mode}</p>
+      <img className="result-octo" src={octo} alt="" />
+      <p className="eyebrow">Fin de partie, {result.mode}</p>
       <h1>{result.score}<span className="result-unit"> points</span></h1>
       {result.mode !== 'Chrono libre' && (
         <p className="adjusted-score">Score ajusté <strong>{result.adjustedScore}</strong></p>
       )}
-      {result.isNewRecord && <div className="record-badge">Nouveau record</div>}
+      {result.isNewRecord && result.score > 0 && <div className="record-badge">Nouveau record</div>}
       <section className="result-stats">
         <div><span>Précision</span><strong>{result.accuracy}%</strong></div>
         <div><span>Temps moyen</span><strong>{result.averageResponseTime.toFixed(1)} s</strong></div>
