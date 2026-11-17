@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AchievementToast } from './components/AchievementToast'
+import { AmbientBubbles } from './components/AmbientBubbles'
 import { TopControls } from './components/TopControls'
 import { Decor } from './components/Decor'
 import { evaluate } from './game/achievements'
@@ -663,7 +664,9 @@ function App() {
 
   return (
     <>
+      <AmbientBubbles group="back" />
       <Decor />
+      <AmbientBubbles group="front" />
       {screen !== 'game' && (
         <TopControls
           soundOn={soundOn}

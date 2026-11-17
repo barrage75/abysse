@@ -18,7 +18,11 @@ export function Decor() {
       <div className="decor-swim decor-swim-b"><img src={fishB} alt="" /></div>
       <div className="decor-swim decor-swim-c"><img src={fishC} alt="" /></div>
       <div className="decor-swim decor-swim-d"><img src={fishD} alt="" /></div>
-      <div className="decor-plankton" />
+      <div className="decor-plankton">
+        <span className="decor-plankton-layer decor-plankton-pink" />
+        <span className="decor-plankton-layer decor-plankton-cyan" />
+        <span className="decor-plankton-layer decor-plankton-green" />
+      </div>
     </div>
   )
 }

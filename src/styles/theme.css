@@ -82,6 +82,8 @@ h1, h2, p { margin-top: 0; }
 }
 
 .logo {
+  position: relative;
+  isolation: isolate;
   margin: 0;
   font-size: clamp(56px, min(8.5vw, 13vh), 124px);
   font-weight: 700;
@@ -93,12 +95,22 @@ h1, h2, p { margin-top: 0; }
     0 0 18px rgba(94, 231, 255, 0.9),
     0 0 42px rgba(94, 231, 255, 0.6),
     0 6px 0 #1677a8;
-  animation: logo-glow 4s ease-in-out infinite;
 }
 
-@keyframes logo-glow {
-  50% { text-shadow: 0 0 26px rgba(94, 231, 255, 1), 0 0 60px rgba(166, 107, 255, 0.6), 0 6px 0 #1677a8; }
+.logo::after {
+  content: 'ABYSSE';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: transparent;
+  -webkit-text-stroke: 0 transparent;
+  text-shadow: 0 0 26px rgba(94, 231, 255, 0.4), 0 0 60px rgba(166, 107, 255, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  animation: logo-glow 4s ease-in-out infinite;
+  will-change: opacity;
 }
+@keyframes logo-glow { 50% { opacity: 1; } }
 
 .home-tagline {
   margin: 4px 0 20px;
@@ -136,6 +148,7 @@ h1, h2, p { margin-top: 0; }
   background: none;
   filter: drop-shadow(0 0 14px color-mix(in srgb, var(--liquid) 60%, transparent));
   transition: transform 0.18s ease, filter 0.18s ease;
+  will-change: transform;
 }
 
 .flask:hover:not(:disabled), .flask:focus-visible {
@@ -152,9 +165,9 @@ h1, h2, p { margin-top: 0; }
 .flask-round .flask-art { max-width: min(190px, 23vh); }
 .flask-cone .flask-art { max-width: min(250px, 30vh); }
 
-.flask-liquid { animation: wave 3.2s linear infinite; }
+.flask-liquid { animation: wave 3.2s linear infinite; will-change: transform; }
 @keyframes wave { to { transform: translateX(-120px); } }
-.flask-bubble { animation: rise 3s ease-in infinite; }
+.flask-bubble { animation: rise 3s ease-in infinite; will-change: transform; }
 .flask-bubble.b2 { animation-delay: 1s; }
 .flask-bubble.b3 { animation-delay: 2s; }
 @keyframes rise {
@@ -484,6 +497,7 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   margin: 0 auto -6px;
   filter: drop-shadow(0 0 22px rgba(166, 107, 255, 0.6));
   animation: bob 3s ease-in-out infinite;
+  will-change: transform;
 }
 @keyframes bob { 50% { transform: translateY(-8px) rotate(2deg); } }
 
@@ -504,7 +518,6 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   background: linear-gradient(90deg, #ffd34d, #ffa53d);
   color: #3b2300;
   font-weight: 700;
-  box-shadow: 0 0 22px rgba(255, 211, 77, 0.7);
 }
 
 .result-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0 24px; }
@@ -667,14 +680,13 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   padding: 0 12px;
   border: 1px solid rgba(160, 240, 255, 0.42);
   border-radius: 999px;
-  background: rgba(10, 40, 80, 0.68);
+  background: rgba(10, 40, 80, 0.82);
   color: var(--foam);
   box-shadow: 0 6px 22px rgba(0, 10, 30, 0.28);
-  backdrop-filter: blur(12px);
   font-size: 15px;
   font-weight: 700;
 }
-.icon-toggle:hover { border-color: var(--lagoon); background: rgba(20, 65, 110, 0.78); }
+.icon-toggle:hover { border-color: var(--lagoon); background: rgba(20, 65, 110, 0.88); }
 
 .countdown-overlay {
   position: fixed;
@@ -682,8 +694,7 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   z-index: 40;
   display: grid;
   place-items: center;
-  background: rgba(3, 10, 26, 0.82);
-  backdrop-filter: blur(8px);
+  background: rgba(3, 10, 26, 0.88);
 }
 .countdown-overlay > span {
   color: var(--foam);

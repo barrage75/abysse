@@ -18,6 +18,7 @@
   filter: blur(14px);
   mix-blend-mode: screen;
   animation: ray-sway 9s ease-in-out infinite;
+  will-change: transform;
 }
 .decor-rays span:nth-child(1) { left: 14%; rotate: 16deg; }
 .decor-rays span:nth-child(2) { left: 36%; width: 8vw; rotate: 10deg; animation-delay: -3s; animation-duration: 11s; }
@@ -40,6 +41,7 @@
   background-size: 320px 240px;
   mix-blend-mode: screen;
   animation: caustics 18s linear infinite;
+  will-change: transform;
 }
 @keyframes caustics {
   0% { transform: translate(0, 0) rotate(0deg); }
@@ -53,6 +55,8 @@
   opacity: 0.85;
   filter: drop-shadow(0 0 22px rgba(94, 231, 255, 0.7));
   animation: jelly-drift 16s ease-in-out infinite, jelly-pulse 2.6s ease-in-out infinite;
+  animation-composition: add, add;
+  will-change: transform;
 }
 .decor-jelly-left { left: 3%; top: 55%; }
 .decor-jelly-right {
@@ -65,10 +69,10 @@
 }
 
 @keyframes jelly-drift {
-  0%, 100% { translate: 0 0; rotate: -4deg; }
-  25% { translate: 18px -60px; rotate: 5deg; }
-  50% { translate: -10px -120px; rotate: -2deg; }
-  75% { translate: 12px -50px; rotate: 4deg; }
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(-4deg); }
+  25% { transform: translate3d(18px, -60px, 0) rotate(5deg); }
+  50% { transform: translate3d(-10px, -120px, 0) rotate(-2deg); }
+  75% { transform: translate3d(12px, -50px, 0) rotate(4deg); }
 }
 @keyframes jelly-pulse {
   0%, 100% { transform: scale(1, 1); }
@@ -81,7 +85,7 @@
   left: 0;
   width: clamp(60px, 7vw, 110px);
   animation: swim-right 34s linear infinite;
-  translate: -20vw 0;
+  will-change: transform;
 }
 .decor-swim img {
   display: block;
@@ -89,6 +93,7 @@
   filter: drop-shadow(0 0 10px rgba(94, 231, 255, 0.45)) saturate(1.1);
   animation: wiggle 0.9s ease-in-out infinite;
   transform-origin: 70% 50%;
+  will-change: transform;
 }
 .decor-swim-a { top: 22%; }
 .decor-swim-b { top: 70%; width: clamp(44px, 5vw, 80px); animation-duration: 27s; animation-delay: -12s; }
@@ -97,17 +102,17 @@
 .decor-swim-c img, .decor-swim-d img { scale: -1 1; }
 
 @keyframes swim-right {
-  0% { translate: -20vw 0; }
-  25% { translate: 30vw -30px; }
-  50% { translate: 60vw 10px; }
-  75% { translate: 90vw -20px; }
-  100% { translate: 120vw 0; }
+  0% { transform: translate3d(-20vw, 0, 0); }
+  25% { transform: translate3d(30vw, -30px, 0); }
+  50% { transform: translate3d(60vw, 10px, 0); }
+  75% { transform: translate3d(90vw, -20px, 0); }
+  100% { transform: translate3d(120vw, 0, 0); }
 }
 @keyframes swim-left {
-  0% { translate: 120vw 0; }
-  30% { translate: 75vw 25px; }
-  60% { translate: 35vw -15px; }
-  100% { translate: -20vw 0; }
+  0% { transform: translate3d(120vw, 0, 0); }
+  30% { transform: translate3d(75vw, 25px, 0); }
+  60% { transform: translate3d(35vw, -15px, 0); }
+  100% { transform: translate3d(-20vw, 0, 0); }
 }
 @keyframes wiggle {
   0%, 100% { transform: rotate(-3deg) scaleX(1); }
@@ -117,16 +122,66 @@
 .decor-plankton {
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(circle, rgba(157, 255, 58, 0.9) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle, rgba(94, 231, 255, 0.9) 0 1px, transparent 2px),
-    radial-gradient(circle, rgba(255, 95, 180, 0.8) 0 1.5px, transparent 2.5px);
-  background-size: 230px 190px, 170px 260px, 310px 230px;
-  background-position: 30px 40px, 110px 10px, 200px 120px;
-  animation: twinkle 4s ease-in-out infinite alternate, plankton-drift 40s linear infinite;
+  animation: twinkle 4s ease-in-out infinite alternate;
+  will-change: opacity;
+}
+.decor-plankton-layer {
+  position: absolute;
+  top: 0;
+  right: var(--right-inset);
+  bottom: var(--negative-period-y);
+  left: var(--left-inset);
+  background-image: var(--plankton-image);
+  background-size: var(--tile-width) var(--tile-height);
+  background-position: var(--background-x) var(--start-y);
+  background-repeat: repeat;
+  animation: plankton-drift 40s linear infinite;
+  will-change: transform;
+}
+.decor-plankton-green {
+  z-index: 3;
+  --tile-width: 230px;
+  --tile-height: 190px;
+  --negative-period-x: -230px;
+  --negative-period-y: -190px;
+  --left-inset: -230px;
+  --right-inset: 0px;
+  --start-x: 30px;
+  --start-y: 40px;
+  --background-x: calc(var(--tile-width) + var(--start-x));
+  --drift: translate3d(230px, -190px, 0);
+  --plankton-image: radial-gradient(circle, rgba(157, 255, 58, 0.9) 0 1.5px, transparent 2.5px);
+}
+.decor-plankton-cyan {
+  z-index: 2;
+  --tile-width: 170px;
+  --tile-height: 260px;
+  --negative-period-x: -170px;
+  --negative-period-y: -260px;
+  --left-inset: 0px;
+  --right-inset: -170px;
+  --start-x: 110px;
+  --start-y: 10px;
+  --background-x: var(--start-x);
+  --drift: translate3d(-170px, -260px, 0);
+  --plankton-image: radial-gradient(circle, rgba(94, 231, 255, 0.9) 0 1px, transparent 2px);
+}
+.decor-plankton-pink {
+  z-index: 1;
+  --tile-width: 310px;
+  --tile-height: 230px;
+  --negative-period-x: -310px;
+  --negative-period-y: -230px;
+  --left-inset: -310px;
+  --right-inset: 0px;
+  --start-x: 200px;
+  --start-y: 120px;
+  --background-x: calc(var(--tile-width) + var(--start-x));
+  --drift: translate3d(310px, -230px, 0);
+  --plankton-image: radial-gradient(circle, rgba(255, 95, 180, 0.8) 0 1.5px, transparent 2.5px);
 }
 @keyframes twinkle { from { opacity: 0.25; } to { opacity: 0.8; } }
-@keyframes plankton-drift { to { background-position: 230px -150px, -60px -250px, 510px -110px; } }
+@keyframes plankton-drift { to { transform: var(--drift); } }
 
 /* Pendant une partie, le décor reste plus discret */
 body:has(.game-page) .decor-jelly,
