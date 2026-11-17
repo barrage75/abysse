@@ -209,7 +209,7 @@ describe('local storage', () => {
     expect(readGameData(storage)).toEqual(emptyGameData())
   })
 
-  it('locks a daily challenge only after saving a finished result', () => {
+  it('does not lock during setup/countdown and locks only after a finished result is saved', () => {
     let value = JSON.stringify({
       ...emptyGameData(),
       dailyResults: [{ date: '2025-05-08' }],
@@ -218,6 +218,7 @@ describe('local storage', () => {
       getItem: (key) => key === STORAGE_KEY ? value : null,
       setItem: (_key, nextValue) => { value = nextValue },
     }
+    // Setup and countdown do not persist a daily result.
     expect(isDailyPlayed('2025-05-08', storage)).toBe(false)
 
     saveGameRecord({

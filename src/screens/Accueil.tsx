@@ -1,5 +1,7 @@
 import { Flask } from '../components/Flask'
 import type { StoredGameData } from '../game/storage'
+import { useLang } from '../i18n/useLang'
+import { localeFor } from '../i18n/helpers'
 
 const ClockIcon = (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l3 2M9 2h6" /></svg>
@@ -32,6 +34,8 @@ export function Accueil({
   onRecords,
   onAchievements,
 }: AccueilProps) {
+  const { lang, t } = useLang()
+  const formatScore = (score: number) => score.toLocaleString(localeFor(lang))
   const levelsBest = data.bestScores.Niveaux?.score ?? 0
   const dailyBest = data.bestScores['Défi Quotidien']?.score ?? 0
   const zenBest = Object.entries(data.bestScores)
@@ -43,50 +47,50 @@ export function Accueil({
     <main className="home">
       <section className="home-panel">
         <h1 className="logo">ABYSSE</h1>
-        <p className="home-tagline">Le labo de calcul mental du professeur Poulpe</p>
+        <p className="home-tagline">{t.home.tagline}</p>
 
-        <nav className="flask-shelf" aria-label="Modes de jeu">
+        <nav className="flask-shelf" aria-label={t.home.modesAria}>
           <Flask
             shape="tube"
             color="#43d9ff"
-            label="Niveaux"
+            label={t.home.levelLabel}
             icon="★"
-            detail={levelsBest ? `Record ${levelsBest}` : '6 niveaux, 3 vies'}
+            detail={levelsBest ? t.home.levelBest(formatScore(levelsBest)) : t.home.levelDetail}
             onClick={onLevels}
           />
           <Flask
             shape="round"
             color="#a66bff"
-            label="Chrono libre"
+            label={t.home.timeAttackLabel}
             icon={ClockIcon}
-            detail={zenBest ? `Record ${zenBest}` : '30 s à 3 min'}
+            detail={zenBest ? t.home.timeAttackBest(formatScore(zenBest)) : t.home.timeAttackDetail}
             onClick={onZen}
           />
           <Flask
             shape="cone"
             color="#9dff3a"
-            label="Défi du jour"
+            label={t.home.dailyLabel}
             icon="✦"
-            detail={dailyPlayed ? `Score du jour : ${dailyScore ?? 0}` : 'Même série pour tous'}
+            detail={dailyPlayed ? t.home.dailyPlayed(formatScore(dailyScore ?? 0)) : t.home.dailyAvailable}
             disabled={dailyPlayed}
             onClick={onDaily}
           />
-          <Flask shape="tube" color="#3fe0d0" label="Records" icon={TrophyIcon} onClick={onRecords} />
+          <Flask shape="tube" color="#3fe0d0" label={t.home.recordsLabel} icon={TrophyIcon} onClick={onRecords} />
           <Flask
             shape="round"
             color="#ff5fb4"
-            label="Succès"
+            label={t.home.achievementsLabel}
             icon={MedalIcon}
-            detail={`${data.achievements.length} sur 10`}
+            detail={t.home.achievementCount(data.achievements.length)}
             onClick={onAchievements}
           />
         </nav>
 
-        <div className="best-plaque" aria-label="Meilleur score">
-          <span>Meilleur score</span>
-          <strong>{best ? best.toLocaleString('fr-FR') : '—'}</strong>
+        <div className="best-plaque" aria-label={t.home.bestAria}>
+          <span>{t.home.bestLabel}</span>
+          <strong>{best ? formatScore(best) : '—'}</strong>
         </div>
-        <p className="home-footer">Hors ligne. Tes scores restent sur cet appareil.</p>
+        <p className="home-footer">{t.home.offline}</p>
       </section>
     </main>
   )

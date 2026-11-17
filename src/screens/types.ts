@@ -31,6 +31,7 @@ export interface GameSession {
 
 export interface GameResult {
   mode: GameMode
+  date: string
   score: number
   adjustedScore: number
   accuracy: number

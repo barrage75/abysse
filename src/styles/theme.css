@@ -649,3 +649,76 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
 }
 .quit-confirm p { margin: 0; font-size: 26px; font-weight: 650; max-width: 22ch; }
 .quit-confirm div { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.top-controls {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+}
+
+.icon-toggle {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(160, 240, 255, 0.42);
+  border-radius: 999px;
+  background: rgba(10, 40, 80, 0.68);
+  color: var(--foam);
+  box-shadow: 0 6px 22px rgba(0, 10, 30, 0.28);
+  backdrop-filter: blur(12px);
+  font-size: 15px;
+  font-weight: 700;
+}
+.icon-toggle:hover { border-color: var(--lagoon); background: rgba(20, 65, 110, 0.78); }
+
+.countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: rgba(3, 10, 26, 0.82);
+  backdrop-filter: blur(8px);
+}
+.countdown-overlay > span {
+  color: var(--foam);
+  font-family: var(--display);
+  font-size: clamp(120px, 30vw, 340px);
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 36px rgba(94, 231, 255, 0.7), 0 0 90px rgba(166, 107, 255, 0.6);
+  animation: countdown-pop 0.7s ease-out both;
+}
+.countdown-quit { position: absolute; bottom: max(32px, env(safe-area-inset-bottom)); }
+@keyframes countdown-pop {
+  0% { opacity: 0; transform: scale(1.6); }
+  28% { opacity: 1; transform: scale(1); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.92); }
+}
+
+.combo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 12px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 95, 180, 0.8);
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(255, 95, 180, 0.24), rgba(166, 107, 255, 0.28));
+  color: #ffd7ef;
+  box-shadow: 0 0 18px rgba(255, 95, 180, 0.38), inset 0 0 12px rgba(255, 255, 255, 0.08);
+  font-size: 16px;
+  font-weight: 700;
+  animation: combo-pop 0.26s ease-out;
+}
+@keyframes combo-pop {
+  from { opacity: 0; transform: scale(0.72); }
+  to { opacity: 1; transform: scale(1); }
+}
+.best-adjusted-score { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.2; }

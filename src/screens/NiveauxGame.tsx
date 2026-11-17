@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
 import octo from '../assets/octo.webp'
 import octoSad from '../assets/octo-sad.webp'
-import { getLevel } from '../game/levels'
+import { useLang } from '../i18n/useLang'
+import { levelName, localeFor, modeLabel } from '../i18n/helpers'
 import type { Fx, GameSession } from './types'
 
 interface NiveauxGameProps {
@@ -10,6 +11,7 @@ interface NiveauxGameProps {
   remainingSeconds: number
   answer: string
   feedback: string
+  bestAdjustedScore: number
   levelUp: boolean
   fx: Fx | null
   quitConfirm: boolean
@@ -27,6 +29,7 @@ export function NiveauxGame({
   remainingSeconds,
   answer,
   feedback,
+  bestAdjustedScore,
   levelUp,
   fx,
   quitConfirm,
@@ -38,9 +41,9 @@ export function NiveauxGame({
   onRequestQuit,
   onContinue,
 }: NiveauxGameProps) {
+  const { lang, t } = useLang()
   const inputRef = useRef<HTMLInputElement>(null)
   const isTouch = useIsTouch()
-  const level = getLevel(session.level)
   const progress = Math.max(0, Math.min(100, (remainingSeconds / session.timeLimitSeconds) * 100))
   const isDaily = session.mode === 'Défi Quotidien'
   const mood = fx?.kind === 'wrong' || fx?.kind === 'timeout'
@@ -57,28 +60,36 @@ export function NiveauxGame({
     <main className="game-page page-shell">
       {fx && <div className="fx-layer" key={fx.id} data-kind={fx.kind} aria-hidden="true" />}
       <header className="game-header">
-        <button className="back-button" onClick={onRequestQuit}>Quitter</button>
-        <span className="game-mode-label">{session.mode}</span>
-        <div className="lives" aria-label={`${session.lives} vies restantes`}>
+        <button className="back-button" onClick={onRequestQuit}>{t.game.quit}</button>
+        <span className="game-mode-label">{modeLabel(session.mode, t)}</span>
+        <div className="lives" aria-label={t.game.lives(session.lives)}>
           {Array.from({ length: 3 }, (_, index) => <span key={index} className={index < session.lives ? 'life is-live' : 'life'}>●</span>)}
         </div>
       </header>
 
-      {levelUp && !isDaily && <div className="level-up-banner" role="status">Niveau supérieur : {level.name} !</div>}
+      {levelUp && !isDaily && <div className="level-up-banner" role="status">{t.game.levelUp(levelName(session.level, t))}</div>}
       <section className="game-meta">
-        <div><span>Niveau {session.level}</span><strong>{level.name}</strong></div>
-        <div><span>Score</span><strong>{session.score}</strong></div>
-        <div><span>Série</span><strong>{session.streak}</strong></div>
+        <div><span>{t.game.levelNumber(session.level)}</span><strong>{levelName(session.level, t)}</strong></div>
+        <div>
+          <span>{t.game.score}</span><strong>{session.score.toLocaleString(localeFor(lang))}</strong>
+          {!isDaily && bestAdjustedScore > 0 && (
+            <small className="best-adjusted-score">{t.game.adjustedBest(bestAdjustedScore.toLocaleString(localeFor(lang)))}</small>
+          )}
+        </div>
+        <div><span>{t.game.streak}</span><strong>{session.streak}</strong></div>
       </section>
-      <div className="question-timer" aria-label={`${Math.ceil(remainingSeconds)} secondes restantes`}>
+      <div className="question-timer" aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}>
         <div style={{ width: `${progress}%` }} />
       </div>
 
       <img className="game-octo" data-mood={mood} src={mood === 'sad' ? octoSad : octo} alt="" />
       <section className="question-area" data-fx={fx?.kind}>
-        <p className="question-count">
-          {isDaily ? `Question ${session.questionNumber} sur 20` : `Question ${session.questionNumber}`}
-        </p>
+        <p className="question-count">{isDaily
+          ? t.game.dailyQuestion(session.questionNumber, 20)
+          : t.game.question(session.questionNumber)}</p>
+        {session.streak >= 3 && (
+          <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
+        )}
         <h1 className="question-text" key={session.questionNumber} data-fx={fx?.kind}>
           {session.question.text} <span>=</span>
         </h1>
@@ -89,7 +100,7 @@ export function NiveauxGame({
             onSubmit()
           }}
         >
-          <label className="visually-hidden" htmlFor="answer">Votre réponse</label>
+          <label className="visually-hidden" htmlFor="answer">{t.game.answerLabel}</label>
           <input
             id="answer"
             ref={inputRef}
@@ -100,22 +111,22 @@ export function NiveauxGame({
             aria-describedby="answer-feedback"
             placeholder="?"
           />
-          <button className="button button-primary" type="submit">Valider</button>
+          <button className="button button-primary" type="submit">{t.game.submit}</button>
         </form>
-        <p id="answer-feedback" className="answer-feedback" aria-live="polite">{feedback || 'Entrée pour valider'}</p>
+        <p id="answer-feedback" className="answer-feedback" aria-live="polite">{feedback || t.game.enterHint}</p>
         <NumericKeypad
           onDigit={(digit) => onAnswerChange(`${answer}${digit}`)}
           onBackspace={onBackspace}
           onClear={onClear}
         />
       </section>
-      {!isDaily && <p className="game-hint">Une bonne réponse en moins de 3 secondes vaut 150 points.</p>}
+      {!isDaily && <p className="game-hint">{t.game.pointsSpeed}</p>}
       {quitConfirm && (
         <div className="quit-confirm" role="alertdialog" aria-modal="true">
-          <p>Quitter la partie ?{isDaily && ' Ta tentative du jour ne sera pas comptée.'}</p>
+          <p>{t.game.quitQuestion}{isDaily ? t.game.dailyQuitNote : ''}</p>
           <div>
-            <button className="button button-primary" onClick={onQuit}>Oui, quitter</button>
-            <button className="button button-secondary" onClick={onContinue}>Continuer</button>
+            <button className="button button-primary" onClick={onQuit}>{t.game.confirmQuit}</button>
+            <button className="button button-secondary" onClick={onContinue}>{t.game.continue}</button>
           </div>
         </div>
       )}

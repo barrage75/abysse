@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AchievementToast } from './components/AchievementToast'
+import { TopControls } from './components/TopControls'
+import { Decor } from './components/Decor'
 import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
 import { getLevel } from './game/levels'
 import { configFromLevel, generateQuestion } from './game/questions'
 import { dateKey, mulberry32, type RandomSource } from './game/rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './game/scoring'
+import { playSound, primeSound, readSoundEnabled, setSoundEnabled } from './game/sound'
 import {
   isDailyPlayed,
   readGameData,
@@ -15,7 +18,8 @@ import {
   type GameRecord,
   type StoredGameData,
 } from './game/storage'
-import { generateZenQuestion, validateZenConfig, type ZenConfig } from './game/zen'
+import { generateZenQuestion, validateZenConfig, zenComboKey, type ZenConfig } from './game/zen'
+import { useLang } from './i18n/useLang'
 import { Accueil } from './screens/Accueil'
 import { FinDePartie } from './screens/FinDePartie'
 import { NiveauxGame } from './screens/NiveauxGame'
@@ -23,10 +27,11 @@ import { Records } from './screens/Records'
 import { Succes } from './screens/Succes'
 import { ZenGame } from './screens/ZenGame'
 import { DailySetup, NiveauxSetup, ZenSetup } from './screens/Setup'
+import { Countdown } from './screens/Countdown'
 import type { Fx, FxKind, GameResult, GameSession } from './screens/types'
 import './styles/theme.css'
 
-type Screen = 'home' | 'levels-setup' | 'daily-setup' | 'zen-setup' | 'game' | 'results' | 'records' | 'achievements'
+type Screen = 'home' | 'levels-setup' | 'daily-setup' | 'zen-setup' | 'countdown' | 'game' | 'results' | 'records' | 'achievements'
 type LastSetup =
   | { mode: 'Niveaux'; startingLevel: number }
   | { mode: 'Chrono libre'; config: ZenConfig }
@@ -38,6 +43,7 @@ function dateFromKey(key: string): Date {
 }
 
 function App() {
+  const { t } = useLang()
   const [screen, setScreen] = useState<Screen>('home')
   const [storedData, setStoredData] = useState<StoredGameData>(() => readGameData())
   const [session, setSession] = useState<GameSession | null>(null)
@@ -49,8 +55,11 @@ function App() {
   const [fx, setFx] = useState<Fx | null>(null)
   const [quitConfirm, setQuitConfirm] = useState(false)
   const [replayHotkeyReady, setReplayHotkeyReady] = useState(false)
+  const [soundOn, setSoundOn] = useState(readSoundEnabled)
+  const [countdownValue, setCountdownValue] = useState<number | 'dive' | null>(null)
   const [clock, setClock] = useState(Date.now())
   const [dailySetupDate, setDailySetupDate] = useState<Date | null>(null)
+  const [countdownReturnScreen, setCountdownReturnScreen] = useState<Screen>('home')
   const dismissToast = useCallback(() => setToast([]), [])
   const rngRef = useRef<RandomSource>(Math.random)
   const finalizedRef = useRef(false)
@@ -58,11 +67,25 @@ function App() {
   const wrongCurrentRef = useRef('')
   const wrongClearTimeoutRef = useRef<number | null>(null)
   const fxIdRef = useRef(0)
+  const hiddenAtRef = useRef<number | null>(null)
   const lastSetupRef = useRef<LastSetup | null>(null)
+  const pendingGameRef = useRef<LastSetup | null>(null)
 
   const currentDate = dateKey(new Date())
   const dailyPlayed = isDailyPlayed(currentDate)
   const todayDailyScore = storedData.dailyResults.find((daily) => daily.date === currentDate)?.score
+  const bestAdjustedNiveauxScore = storedData.history.reduce(
+    (best, record) => record.mode === 'Niveaux'
+      ? Math.max(best, record.adjustedScore ?? 0)
+      : best,
+    0,
+  )
+  const bestZenScore = session?.mode === 'Chrono libre' && session.duration
+    ? storedData.bestScores[`Chrono libre:${zenComboKey({
+      duration: session.duration,
+      operations: session.operations ?? [],
+    })}`]?.score ?? 0
+    : 0
   const remainingSeconds = session?.mode === 'Chrono libre' && session.deadline
     ? Math.max(0, (session.deadline - clock) / 1000)
     : session
@@ -71,9 +94,37 @@ function App() {
 
   useEffect(() => {
     if (screen !== 'game') return
-    const interval = window.setInterval(() => setClock(Date.now()), 100)
+    const interval = window.setInterval(() => {
+      if (!document.hidden) setClock(Date.now())
+    }, 100)
     return () => window.clearInterval(interval)
   }, [screen])
+
+  useEffect(() => {
+    if (screen !== 'game' || session?.mode === 'Chrono libre') {
+      hiddenAtRef.current = null
+      return
+    }
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (hiddenAtRef.current === null) hiddenAtRef.current = Date.now()
+        return
+      }
+      if (hiddenAtRef.current === null) return
+      const hiddenDuration = Date.now() - hiddenAtRef.current
+      hiddenAtRef.current = null
+      setSession((current) => {
+        if (!current || current.mode === 'Chrono libre') return current
+        return { ...current, questionStartedAt: current.questionStartedAt + hiddenDuration }
+      })
+      setClock(Date.now())
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+      hiddenAtRef.current = null
+    }
+  }, [screen, session?.mode])
 
   useEffect(() => {
     if (!fx) return
@@ -86,6 +137,7 @@ function App() {
   const triggerFx = useCallback((kind: FxKind) => {
     fxIdRef.current += 1
     setFx({ kind, id: fxIdRef.current })
+    playSound(kind)
   }, [])
 
   const clearWrongClearTimeout = useCallback(() => {
@@ -98,6 +150,7 @@ function App() {
   const finishGame = useCallback((current: GameSession) => {
     if (finalizedRef.current) return
     finalizedRef.current = true
+    playSound('end')
     const date = current.dailyDate ?? dateKey(new Date())
     const adjusted = current.mode === 'Niveaux'
       ? adjustedScore(current.score, current.startingLevel)
@@ -162,6 +215,7 @@ function App() {
     setToast(earned)
     setResult({
       mode: current.mode,
+      date,
       score: current.score,
       adjustedScore: adjusted,
       accuracy,
@@ -178,8 +232,9 @@ function App() {
     setScreen('results')
   }, [])
 
-  const startLevels = useCallback((startingLevel: number, daily = false) => {
+  const launchLevels = useCallback((startingLevel: number, daily = false) => {
     const startedAt = Date.now()
+    setClock(startedAt)
     const dailyDate = daily ? dateKey(new Date(startedAt)) : undefined
     const firstDailyQuestion = daily ? dailyQuestion(new Date(startedAt), 0) : undefined
     const chosenLevel = firstDailyQuestion?.levelId ?? startingLevel
@@ -226,9 +281,10 @@ function App() {
     setScreen('game')
   }, [clearWrongClearTimeout])
 
-  const startZen = useCallback((config: ZenConfig) => {
+  const launchZen = useCallback((config: ZenConfig) => {
     if (Object.keys(validateZenConfig(config)).length > 0) return
     const startedAt = Date.now()
+    setClock(startedAt)
     rngRef.current = mulberry32(Math.floor(Math.random() * 0xffffffff))
     const nextSession: GameSession = {
       mode: 'Chrono libre',
@@ -271,6 +327,57 @@ function App() {
     setScreen('game')
   }, [clearWrongClearTimeout])
 
+  const beginCountdown = useCallback((pending: LastSetup, returnScreen: Screen) => {
+    pendingGameRef.current = pending
+    setCountdownReturnScreen(returnScreen)
+    primeSound()
+    playSound('tick')
+    setCountdownValue(3)
+    setScreen('countdown')
+  }, [])
+
+  const startLevels = useCallback((startingLevel: number, daily = false) => {
+    beginCountdown(
+      daily ? { mode: 'Défi Quotidien' } : { mode: 'Niveaux', startingLevel },
+      daily ? 'daily-setup' : 'levels-setup',
+    )
+  }, [beginCountdown])
+
+  const startZen = useCallback((config: ZenConfig) => {
+    if (Object.keys(validateZenConfig(config)).length > 0) return
+    beginCountdown({ mode: 'Chrono libre', config }, 'zen-setup')
+  }, [beginCountdown])
+
+  const cancelCountdown = useCallback(() => {
+    pendingGameRef.current = null
+    setCountdownValue(null)
+    setScreen(countdownReturnScreen)
+  }, [countdownReturnScreen])
+
+  useEffect(() => {
+    if (countdownValue === null) return
+    const timeout = window.setTimeout(() => {
+      if (typeof countdownValue === 'number') {
+        if (countdownValue > 1) {
+          setCountdownValue(countdownValue - 1)
+          playSound('tick')
+        } else {
+          setCountdownValue('dive')
+          playSound('go')
+        }
+        return
+      }
+
+      const pending = pendingGameRef.current
+      pendingGameRef.current = null
+      setCountdownValue(null)
+      if (pending?.mode === 'Niveaux') launchLevels(pending.startingLevel)
+      else if (pending?.mode === 'Défi Quotidien') launchLevels(2, true)
+      else if (pending?.mode === 'Chrono libre') launchZen(pending.config)
+    }, 700)
+    return () => window.clearTimeout(timeout)
+  }, [countdownValue, launchLevels, launchZen])
+
   const handleNiveauxMistake = useCallback((timedOut = false) => {
     if (!session || session.mode === 'Chrono libre' || finalizedRef.current) return
     clearWrongClearTimeout()
@@ -310,9 +417,11 @@ function App() {
     }
     setSession(updated)
     setAnswer('')
-    setFeedback(`${timedOut ? 'Temps écoulé' : 'Raté'} ! ${question.text} = ${question.answer}`)
+    setFeedback(timedOut
+      ? t.game.timeout(question.text, question.answer)
+      : t.game.wrong(question.text, question.answer))
     triggerFx(timedOut ? 'timeout' : 'wrong')
-  }, [session, clearWrongClearTimeout, triggerFx, finishGame])
+  }, [session, clearWrongClearTimeout, triggerFx, finishGame, t])
 
   function submitNiveauxAnswer() {
     if (!session || session.mode === 'Chrono libre' || finalizedRef.current) return
@@ -366,7 +475,11 @@ function App() {
     }
     setSession(nextSession)
     setAnswer('')
-    setFeedback(scored.label)
+    setFeedback(scored.label === 'Éclair'
+      ? t.game.lightning
+      : scored.label === 'Rapide'
+        ? t.game.fast
+        : t.game.normal)
     if (progress.leveledUp && !isDaily) {
       setLevelUp(true)
       triggerFx('levelup')
@@ -405,7 +518,11 @@ function App() {
       const attempt = `${session.questionNumber}:${value}`
       if (wrongCurrentRef.current !== attempt) {
         wrongCurrentRef.current = attempt
-        setSession({ ...session, zenWrongAttempts: session.zenWrongAttempts + 1 })
+        setSession({
+          ...session,
+          zenWrongAttempts: session.zenWrongAttempts + 1,
+          streak: 0,
+        })
         triggerFx('wrong')
         clearWrongClearTimeout()
         wrongClearTimeoutRef.current = window.setTimeout(() => {
@@ -475,6 +592,17 @@ function App() {
   }, [screen, session, quitConfirm, handleZenSkip])
 
   useEffect(() => {
+    if (screen !== 'countdown') return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      event.preventDefault()
+      cancelCountdown()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [screen, cancelCountdown])
+
+  useEffect(() => {
     const timeoutId = wrongClearTimeoutRef.current
     return () => {
       if (timeoutId !== null) {
@@ -519,8 +647,32 @@ function App() {
     else setAnswer('')
   }
 
+  function toggleSound() {
+    const next = !soundOn
+    setSoundOn(next)
+    setSoundEnabled(next)
+    if (next) primeSound()
+  }
+
+  const showLevelsSetup = screen === 'levels-setup'
+    || (screen === 'countdown' && countdownReturnScreen === 'levels-setup')
+  const showDailySetup = screen === 'daily-setup'
+    || (screen === 'countdown' && countdownReturnScreen === 'daily-setup')
+  const showZenSetup = screen === 'zen-setup'
+    || (screen === 'countdown' && countdownReturnScreen === 'zen-setup')
+
   return (
     <>
+      <Decor />
+      {screen !== 'game' && (
+        <TopControls
+          soundOn={soundOn}
+          onToggleSound={toggleSound}
+        />
+      )}
+      {screen === 'countdown' && countdownValue !== null && (
+        <Countdown value={countdownValue} onQuit={cancelCountdown} />
+      )}
       {screen === 'home' && (
         <Accueil
           data={storedData}
@@ -537,20 +689,21 @@ function App() {
           onAchievements={() => setScreen('achievements')}
         />
       )}
-      {screen === 'levels-setup' && <NiveauxSetup onStart={(level) => startLevels(level)} onBack={returnHome} />}
-      {screen === 'daily-setup' && (
+      {showLevelsSetup && <NiveauxSetup onStart={(level) => startLevels(level)} onBack={returnHome} />}
+      {showDailySetup && (
         <DailySetup
           date={dailySetupDate!}
           onStart={() => startLevels(2, true)}
           onBack={returnHome}
         />
       )}
-      {screen === 'zen-setup' && <ZenSetup onStart={startZen} onBack={returnHome} />}
+      {showZenSetup && <ZenSetup onStart={startZen} onBack={returnHome} />}
       {screen === 'game' && session?.mode === 'Chrono libre' && (
         <ZenGame
           session={session}
           remainingSeconds={remainingSeconds}
           answer={answer}
+          bestScore={bestZenScore}
           fx={fx}
           quitConfirm={quitConfirm}
           onAnswerChange={handleZenAnswer}
@@ -568,6 +721,7 @@ function App() {
           remainingSeconds={remainingSeconds}
           answer={answer}
           feedback={feedback}
+          bestAdjustedScore={bestAdjustedNiveauxScore}
           levelUp={levelUp}
           fx={fx}
           quitConfirm={quitConfirm}

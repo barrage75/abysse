@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLang } from '../i18n/useLang'
 
 interface NumericKeypadProps {
   onDigit: (value: string) => void
@@ -23,14 +24,15 @@ export function useIsTouch() {
 
 export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadProps) {
   const isTouch = useIsTouch()
+  const { t } = useLang()
   if (!isTouch) return null
 
   return (
-    <div className="keypad" aria-label="Pavé numérique">
+    <div className="keypad" aria-label={t.game.keypad}>
       {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
         <button key={digit} type="button" onClick={() => onDigit(digit)}>{digit}</button>
       ))}
-      <button type="button" className="keypad-secondary" onClick={onClear}>Effacer</button>
+      <button type="button" className="keypad-secondary" onClick={onClear}>{t.game.clear}</button>
       <button type="button" onClick={() => onDigit('0')}>0</button>
       <button type="button" className="keypad-secondary" onClick={onBackspace}>⌫</button>
     </div>
