@@ -1,0 +1,170 @@
+/* ---------- Accueil vivant : décor, pieuvre animée, intro ---------- */
+
+:root {
+  --home-bg: url('../assets/bg-lab.webp');
+  --px: 0;
+  --py: 0;
+}
+
+.home {
+  background: var(--abyss);
+  isolation: isolate;
+}
+
+.home-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.home-bg {
+  position: absolute;
+  inset: -24px;
+  background: var(--home-bg) left center / cover no-repeat;
+  transform: translate3d(calc(var(--px) * -14px), calc(var(--py) * -10px), 0) scale(1.02);
+  transition: transform 0.6s ease-out;
+  animation: bg-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  will-change: transform;
+}
+@keyframes bg-in { from { transform: scale(1.12); } }
+
+/* La pieuvre : parallaxe (wrap) > penchement (lean) > respiration (img) */
+.home-octo-wrap {
+  position: absolute;
+  left: 1vw;
+  bottom: 3vh;
+  width: min(44vw, 82vh);
+  transform: translate3d(calc(var(--px) * 18px), calc(var(--py) * 12px), 0);
+  transition: transform 0.5s ease-out;
+  will-change: transform;
+}
+
+.home-octo-lean {
+  position: relative;
+  transform-origin: 50% 90%;
+  transition: transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+  animation: octo-rise 1.2s cubic-bezier(0.2, 1.2, 0.35, 1) 0.15s backwards;
+}
+@keyframes octo-rise {
+  from { transform: translateY(70%) rotate(-6deg) scale(0.85); }
+}
+
+.home:has(.flask:hover:not(:disabled)) .home-octo-lean,
+.home:has(.flask:focus-visible) .home-octo-lean {
+  transform: translateX(3%) rotate(4deg) scale(1.03);
+}
+
+.home-octo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 18px 30px rgba(10, 0, 40, 0.55));
+  transform-origin: 50% 85%;
+  animation: octo-breathe 4.5s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes octo-breathe {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  30% { transform: translateY(-1.6%) rotate(-1.2deg) scale(1.01, 0.995); }
+  65% { transform: translateY(-0.6%) rotate(1deg) scale(0.995, 1.01); }
+}
+
+/* Petites bulles qui s'échappent des fioles de la pieuvre */
+.flask-fizz { position: absolute; width: 0; height: 0; }
+.flask-fizz.f1 { left: 17.5%; top: 2%; --c: #b6ff5a; }
+.flask-fizz.f2 { left: 85%; top: 10%; --c: #e08bff; }
+.flask-fizz.f3 { left: 18.3%; top: 40%; --c: #7cf3ff; }
+.flask-fizz.f4 { left: 90.8%; top: 39%; --c: #f2ff6a; }
+.flask-fizz.f5 { left: 30.3%; top: 67.5%; --c: #ff8be6; }
+.flask-fizz.f6 { left: 85%; top: 67%; --c: #a6ff4d; }
+
+.flask-fizz i {
+  position: absolute;
+  left: -5px;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--c) 40%, transparent 72%);
+  opacity: 0;
+  animation: fizz 2.6s ease-out infinite;
+  will-change: transform, opacity;
+}
+.flask-fizz i:nth-child(2) { width: 7px; height: 7px; left: 2px; animation-delay: 0.9s; animation-duration: 2.2s; }
+.flask-fizz i:nth-child(3) { width: 12px; height: 12px; left: -9px; animation-delay: 1.7s; animation-duration: 3s; }
+.flask-fizz.f2 i { animation-delay: 0.4s; }
+.flask-fizz.f3 i { animation-delay: 1.2s; }
+.flask-fizz.f4 i { animation-delay: 0.7s; }
+.flask-fizz.f5 i { animation-delay: 1.5s; }
+.flask-fizz.f6 i { animation-delay: 0.2s; }
+
+@keyframes fizz {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.4); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(8px, -70px, 0) scale(1.15); }
+}
+
+/* Intro : le titre remonte lettre par lettre comme des bulles */
+.home-panel { animation: none; }
+
+.logo { display: flex; justify-content: center; }
+.logo-letter {
+  display: inline-block;
+  animation:
+    letter-up 0.8s cubic-bezier(0.25, 1.6, 0.45, 1) calc(0.45s + var(--i) * 0.07s) backwards,
+    letter-bob 5s ease-in-out calc(1.5s + var(--i) * 0.25s) infinite;
+  will-change: transform;
+}
+@keyframes letter-up {
+  from { transform: translateY(0.9em) scale(0.3) rotate(-12deg); }
+}
+@keyframes letter-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-0.06em); }
+}
+
+.home-tagline { animation: tagline-in 0.8s ease-out 0.9s backwards; }
+@keyframes tagline-in { from { transform: translateY(12px); } }
+
+/* Les fioles arrivent une par une, puis flottent */
+.flask-shelf .flask {
+  animation:
+    flask-in 0.75s cubic-bezier(0.3, 1.6, 0.5, 1) backwards,
+    float 5s ease-in-out infinite;
+}
+.flask-shelf .flask:nth-child(1) { animation-delay: 0.85s, 0s; }
+.flask-shelf .flask:nth-child(2) { animation-delay: 0.95s, -1s; }
+.flask-shelf .flask:nth-child(3) { animation-delay: 1.05s, -2.2s; }
+.flask-shelf .flask:nth-child(4) { animation-delay: 1.15s, -3.1s; }
+.flask-shelf .flask:nth-child(5) { animation-delay: 1.25s, -4s; }
+@keyframes flask-in {
+  from { transform: translateY(-36px) scale(0.6) rotate(-8deg); }
+}
+
+.best-plaque { animation: plaque-swing 1s cubic-bezier(0.3, 1.6, 0.5, 1) 1.4s backwards; transform-origin: 50% -20px; }
+@keyframes plaque-swing { from { transform: rotate(14deg) translateY(-20px); } }
+
+/* Les tableaux descendent en place quand on change d'écran */
+.page-shell { animation: board-in 0.55s cubic-bezier(0.25, 1.3, 0.5, 1) backwards; }
+@keyframes board-in { from { transform: translateY(-28px) rotate(-0.8deg); } }
+
+@media (max-width: 860px) {
+  .home { background: var(--abyss); }
+  .home-bg { background-position: 88% center; }
+  .home-scene::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 18%, rgba(4, 18, 44, 0.55) 42%, rgba(4, 18, 44, 0.35) 100%);
+  }
+  .home-octo-wrap { z-index: 1; }
+  .home-octo-wrap {
+    left: calc(50% - min(39vw, 190px));
+    top: 6px;
+    bottom: auto;
+    width: min(78vw, 380px);
+  }
+  .home-panel { padding-top: calc(min(78vw, 380px) / 1.076 + 4px); }
+}

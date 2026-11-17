@@ -39,6 +39,7 @@ import { Countdown } from './screens/Countdown'
 import type { Fx, FxKind, GameResult, GameSession } from './screens/types'
 import './styles/theme.css'
 import './styles/chalk.css'
+import './styles/home.css'
 
 type Screen = 'home' | 'levels-setup' | 'daily-setup' | 'zen-setup' | 'countdown' | 'game' | 'results' | 'records' | 'achievements'
 type LastSetup =
