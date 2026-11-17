@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useEffect, useState } from 'react'
 import bgLab from '../assets/bg-lab.webp'
 import octoLab from '../assets/octo-lab.webp'
 import { Flask } from '../components/Flask'
@@ -58,7 +58,6 @@ export function Accueil({
     .filter(([key]) => key.startsWith('Chrono libre:'))
     .reduce((best, [, score]) => Math.max(best, score.score), 0)
   const best = Math.max(levelsBest, dailyBest)
-  const homeRef = useRef<HTMLElement>(null)
   const [phase, setPhase] = useState<IntroPhase>(() => (introPlayed ? 'static' : 'waiting'))
 
   useEffect(() => {
@@ -77,16 +76,8 @@ export function Accueil({
     }
   }, [phase])
 
-  const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
-    const home = homeRef.current
-    if (!home || event.pointerType !== 'mouse') return
-    const rect = home.getBoundingClientRect()
-    home.style.setProperty('--px', (((event.clientX - rect.left) / rect.width) * 2 - 1).toFixed(3))
-    home.style.setProperty('--py', (((event.clientY - rect.top) / rect.height) * 2 - 1).toFixed(3))
-  }
-
   return (
-    <main className={`home is-${phase}`} ref={homeRef} onPointerMove={handlePointerMove}>
+    <main className={`home is-${phase}`}>
       <div className="home-scene" aria-hidden="true">
         <div className="home-bg" />
         <div className="home-octo-wrap">

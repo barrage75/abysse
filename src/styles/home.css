@@ -2,8 +2,6 @@
 
 :root {
   --home-bg: url('../assets/bg-lab.webp');
-  --px: 0;
-  --py: 0;
 }
 
 .home {
@@ -23,42 +21,30 @@
   position: absolute;
   inset: -24px;
   background: var(--home-bg) left center / cover no-repeat;
-  transform: translate3d(calc(var(--px) * -14px), calc(var(--py) * -10px), 0) scale(1.02);
-  transition: transform 0.6s ease-out;
+  transform: scale(1.02);
   will-change: transform;
 }
 .home.is-intro .home-bg { animation: bg-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 @keyframes bg-in { from { transform: scale(1.12); } }
 
-/* La pieuvre : parallaxe (wrap) > penchement (lean) > respiration (img) */
+/* La pieuvre : position (wrap) > entrée (lean) > respiration (img) */
 .home-octo-wrap {
   position: absolute;
   left: 1vw;
   bottom: 3vh;
   width: min(44vw, 82vh, calc(100vw - 560px));
-  transform: translate3d(calc(var(--px) * 18px), calc(var(--py) * 12px), 0);
-  transition: transform 0.5s ease-out;
-  will-change: transform;
 }
 
 .home-octo-lean {
   position: relative;
   transform-origin: 50% 90%;
-  transition: transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
 }
 .home.is-intro .home-octo-lean { animation: octo-rise 1.2s cubic-bezier(0.2, 1.2, 0.35, 1) 0.15s backwards; }
 @keyframes octo-rise {
   from { transform: translateY(70%) rotate(-6deg) scale(0.85); }
 }
 
-@media (hover: hover) {
-  .home:has(.flask:hover:not(:disabled)) .home-octo-lean {
-    transform: translateX(3%) rotate(4deg) scale(1.03);
-  }
-}
-.home:has(.flask:focus-visible) .home-octo-lean {
-  transform: translateX(3%) rotate(4deg) scale(1.03);
-}
+
 
 .home-octo {
   display: block;
@@ -154,6 +140,23 @@
 .home.is-intro .flask-shelf .flask:nth-child(3) { animation-delay: 1.05s, -2.2s; }
 .home.is-intro .flask-shelf .flask:nth-child(4) { animation-delay: 1.15s, -3.1s; }
 .home.is-intro .flask-shelf .flask:nth-child(5) { animation-delay: 1.25s, -4s; }
+/* Survol : la zone cliquable reste immobile, seul le contenu grossit */
+.home .flask-shelf .flask:hover:not(:disabled),
+.home .flask-shelf .flask:focus-visible {
+  animation-play-state: paused;
+  transform: none;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--liquid) 60%, transparent));
+}
+.home .flask-shelf .flask:active:not(:disabled) { transform: none; }
+.flask-shelf .flask > .flask-art,
+.flask-shelf .flask > .flask-text { transition: transform 0.2s ease-out; }
+.flask-shelf .flask:hover:not(:disabled) > .flask-art,
+.flask-shelf .flask:hover:not(:disabled) > .flask-text,
+.flask-shelf .flask:focus-visible > .flask-art,
+.flask-shelf .flask:focus-visible > .flask-text { transform: scale(1.06); }
+.flask-shelf .flask:active:not(:disabled) > .flask-art,
+.flask-shelf .flask:active:not(:disabled) > .flask-text { transform: scale(0.97); }
+
 @keyframes flask-in {
   from { transform: translateY(-36px) scale(0.6) rotate(-8deg); }
 }
