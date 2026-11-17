@@ -13,6 +13,8 @@ const fr = {
     switchToFrench: 'Passer en français',
     disableSound: 'Désactiver le son',
     enableSound: 'Activer le son',
+    disableMotion: 'Couper les animations',
+    enableMotion: 'Activer les animations',
   },
   modes: {
     levels: 'Niveaux',

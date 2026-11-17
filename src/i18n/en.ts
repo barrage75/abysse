@@ -8,6 +8,8 @@ const en = {
     switchToFrench: 'Switch to French',
     disableSound: 'Mute sound',
     enableSound: 'Turn sound on',
+    disableMotion: 'Turn animations off',
+    enableMotion: 'Turn animations on',
   },
   modes: {
     levels: 'Levels',

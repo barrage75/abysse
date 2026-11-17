@@ -50,7 +50,7 @@ Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos
 - Sons synthétisés activables ou non, compte à rebours avant chaque partie et badges de combo.
 - Succès, records et historique conservés localement ; partage du résultat quotidien.
 - Pensé pour jouer sans compte ni service distant : aucune API de jeu, progression stockée dans le navigateur.
-- Interface responsive, pavé numérique tactile et prise en charge de la préférence de réduction des animations.
+- Interface responsive et pavé numérique tactile ; animations activées par défaut, désactivables avec le bouton dédié.
 
 ## Lancer le jeu
 
@@ -87,5 +87,6 @@ React · TypeScript · Vite · Vitest · Web Audio API · Fredoka
 - **Levels:** six levels, three lives, and speed-based scoring.
 - **Time Attack:** choose operations and a 30–180 second timer; skip questions without losing points.
 - **Daily Challenge:** the same 20-question sequence for everyone each day; one completed run counts.
+- Animations are on by default and can be turned off with the motion button.
 
 Run locally with `npm install` and `npm run dev`; build with `npm run build` and test with `npm test`.

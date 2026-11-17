@@ -9,6 +9,7 @@ import { getLevel } from './game/levels'
 import { configFromLevel, generateQuestion } from './game/questions'
 import { dateKey, mulberry32, type RandomSource } from './game/rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './game/scoring'
+import { readMotionEnabled, setMotionEnabled } from './game/motion'
 import { playSound, primeSound, readSoundEnabled, setSoundEnabled } from './game/sound'
 import {
   isDailyPlayed,
@@ -57,6 +58,7 @@ function App() {
   const [quitConfirm, setQuitConfirm] = useState(false)
   const [replayHotkeyReady, setReplayHotkeyReady] = useState(false)
   const [soundOn, setSoundOn] = useState(readSoundEnabled)
+  const [motionOn, setMotionOn] = useState(readMotionEnabled)
   const [countdownValue, setCountdownValue] = useState<number | 'dive' | null>(null)
   const [clock, setClock] = useState(Date.now())
   const [dailySetupDate, setDailySetupDate] = useState<Date | null>(null)
@@ -655,6 +657,12 @@ function App() {
     if (next) primeSound()
   }
 
+  function toggleMotion() {
+    const next = !motionOn
+    setMotionOn(next)
+    setMotionEnabled(next)
+  }
+
   const showLevelsSetup = screen === 'levels-setup'
     || (screen === 'countdown' && countdownReturnScreen === 'levels-setup')
   const showDailySetup = screen === 'daily-setup'
@@ -671,6 +679,8 @@ function App() {
         <TopControls
           soundOn={soundOn}
           onToggleSound={toggleSound}
+          motionOn={motionOn}
+          onToggleMotion={toggleMotion}
         />
       )}
       {screen === 'countdown' && countdownValue !== null && (

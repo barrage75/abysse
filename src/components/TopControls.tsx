@@ -29,12 +29,33 @@ function SoundIcon({ enabled }: { enabled: boolean }) {
   )
 }
 
+function MotionIcon({ enabled }: { enabled: boolean }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 12h3l3-6 4 12 3-6h5" />
+      {!enabled && <path d="m4 4 16 16" />}
+    </svg>
+  )
+}
+
 interface TopControlsProps {
   soundOn: boolean
   onToggleSound: () => void
+  motionOn: boolean
+  onToggleMotion: () => void
 }
 
-export function TopControls({ soundOn, onToggleSound }: TopControlsProps) {
+export function TopControls({ soundOn, onToggleSound, motionOn, onToggleMotion }: TopControlsProps) {
   const { lang, setLang, t } = useLang()
   return (
     <div className="top-controls">
@@ -50,10 +71,21 @@ export function TopControls({ soundOn, onToggleSound }: TopControlsProps) {
         type="button"
         className="icon-toggle"
         aria-label={soundOn ? t.controls.disableSound : t.controls.enableSound}
+        title={soundOn ? t.controls.disableSound : t.controls.enableSound}
         aria-pressed={soundOn}
         onClick={onToggleSound}
       >
         <SoundIcon enabled={soundOn} />
+      </button>
+      <button
+        type="button"
+        className="icon-toggle"
+        aria-label={motionOn ? t.controls.disableMotion : t.controls.enableMotion}
+        title={motionOn ? t.controls.disableMotion : t.controls.enableMotion}
+        aria-pressed={motionOn}
+        onClick={onToggleMotion}
+      >
+        <MotionIcon enabled={motionOn} />
       </button>
     </div>
   )

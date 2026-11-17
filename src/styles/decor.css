@@ -193,6 +193,4 @@ body:has(.game-page) .decor-swim { opacity: 0.45; }
   .decor-jelly-right { top: 12%; opacity: 0.5; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .decor { display: none; }
-}
+html[data-motion='off'] .decor { display: none; }

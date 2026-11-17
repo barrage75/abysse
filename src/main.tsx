@@ -2,7 +2,10 @@ import '@fontsource-variable/fredoka'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
+import { readMotionEnabled } from './game/motion'
 import { LangProvider } from './i18n/LangProvider'
+
+document.documentElement.dataset.motion = readMotionEnabled() ? 'on' : 'off'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

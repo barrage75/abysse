@@ -629,8 +629,11 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
   .answer-form .button { height: 64px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+html[data-motion='off'] *,
+html[data-motion='off'] *::before,
+html[data-motion='off'] *::after {
+  animation: none !important;
+  transition: none !important;
 }
 
 /* ---------- Ajouts : défi du jour, passer, quitter ---------- */

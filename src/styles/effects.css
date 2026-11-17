@@ -274,7 +274,5 @@
   .game-octo { width: 92px; right: 4px; bottom: 4px; opacity: 0.95; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ambient-bubble { will-change: auto; }
-  .fx-layer { display: none; }
-}
+html[data-motion='off'] .ambient-bubble { will-change: auto; }
+html[data-motion='off'] .fx-layer { display: none; }
