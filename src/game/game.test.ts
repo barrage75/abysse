@@ -111,7 +111,7 @@ describe('Chrono libre', () => {
     expect(validateZenConfig({ ...baseConfig, duration: 45 as ZenConfig['duration'] }).duration).toBeDefined()
   })
 
-  it('uses Zetamac operand ranges and exact inverse division', () => {
+  it('uses time attack operand ranges and exact inverse division', () => {
     const rng = mulberry32(123)
     for (const op of ['+', '-', '×', '÷'] as const) {
       for (let index = 0; index < 500; index += 1) {
