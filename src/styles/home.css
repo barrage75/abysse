@@ -25,9 +25,9 @@
   background: var(--home-bg) left center / cover no-repeat;
   transform: translate3d(calc(var(--px) * -14px), calc(var(--py) * -10px), 0) scale(1.02);
   transition: transform 0.6s ease-out;
-  animation: bg-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
   will-change: transform;
 }
+.home.is-intro .home-bg { animation: bg-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
 @keyframes bg-in { from { transform: scale(1.12); } }
 
 /* La pieuvre : parallaxe (wrap) > penchement (lean) > respiration (img) */
@@ -45,8 +45,8 @@
   position: relative;
   transform-origin: 50% 90%;
   transition: transform 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
-  animation: octo-rise 1.2s cubic-bezier(0.2, 1.2, 0.35, 1) 0.15s backwards;
 }
+.home.is-intro .home-octo-lean { animation: octo-rise 1.2s cubic-bezier(0.2, 1.2, 0.35, 1) 0.15s backwards; }
 @keyframes octo-rise {
   from { transform: translateY(70%) rotate(-6deg) scale(0.85); }
 }
@@ -110,16 +110,21 @@
   100% { opacity: 0; transform: translate3d(8px, -70px, 0) scale(1.15); }
 }
 
-/* Intro : le titre remonte lettre par lettre comme des bulles */
+/* Intro : jouée une seule fois, quand le décor et la pieuvre sont chargés */
 .home-panel { animation: none; }
+.home.is-waiting .home-scene,
+.home.is-waiting .home-panel { opacity: 0; }
 
 .logo { display: flex; justify-content: center; }
 .logo-letter {
   display: inline-block;
+  animation: letter-bob 5s ease-in-out calc(var(--i) * 0.25s) infinite;
+  will-change: transform;
+}
+.home.is-intro .logo-letter {
   animation:
     letter-up 0.8s cubic-bezier(0.25, 1.6, 0.45, 1) calc(0.45s + var(--i) * 0.07s) backwards,
     letter-bob 5s ease-in-out calc(1.5s + var(--i) * 0.25s) infinite;
-  will-change: transform;
 }
 @keyframes letter-up {
   from { transform: translateY(0.9em) scale(0.3) rotate(-12deg); }
@@ -129,25 +134,32 @@
   50% { transform: translateY(-0.06em); }
 }
 
-.home-tagline { animation: tagline-in 0.8s ease-out 0.9s backwards; }
+.home.is-intro .home-tagline { animation: tagline-in 0.8s ease-out 0.9s backwards; }
 @keyframes tagline-in { from { transform: translateY(12px); } }
 
 /* Les fioles arrivent une par une, puis flottent */
-.flask-shelf .flask {
+.flask-shelf .flask { animation: float 5s ease-in-out infinite; }
+.flask-shelf .flask:nth-child(1) { animation-delay: 0s; }
+.flask-shelf .flask:nth-child(2) { animation-delay: -1s; }
+.flask-shelf .flask:nth-child(3) { animation-delay: -2.2s; }
+.flask-shelf .flask:nth-child(4) { animation-delay: -3.1s; }
+.flask-shelf .flask:nth-child(5) { animation-delay: -4s; }
+.home.is-intro .flask-shelf .flask {
   animation:
     flask-in 0.75s cubic-bezier(0.3, 1.6, 0.5, 1) backwards,
     float 5s ease-in-out infinite;
 }
-.flask-shelf .flask:nth-child(1) { animation-delay: 0.85s, 0s; }
-.flask-shelf .flask:nth-child(2) { animation-delay: 0.95s, -1s; }
-.flask-shelf .flask:nth-child(3) { animation-delay: 1.05s, -2.2s; }
-.flask-shelf .flask:nth-child(4) { animation-delay: 1.15s, -3.1s; }
-.flask-shelf .flask:nth-child(5) { animation-delay: 1.25s, -4s; }
+.home.is-intro .flask-shelf .flask:nth-child(1) { animation-delay: 0.85s, 0s; }
+.home.is-intro .flask-shelf .flask:nth-child(2) { animation-delay: 0.95s, -1s; }
+.home.is-intro .flask-shelf .flask:nth-child(3) { animation-delay: 1.05s, -2.2s; }
+.home.is-intro .flask-shelf .flask:nth-child(4) { animation-delay: 1.15s, -3.1s; }
+.home.is-intro .flask-shelf .flask:nth-child(5) { animation-delay: 1.25s, -4s; }
 @keyframes flask-in {
   from { transform: translateY(-36px) scale(0.6) rotate(-8deg); }
 }
 
-.best-plaque { animation: plaque-swing 1s cubic-bezier(0.3, 1.6, 0.5, 1) 1.4s backwards; transform-origin: 50% -20px; }
+.best-plaque { transform-origin: 50% -20px; }
+.home.is-intro .best-plaque { animation: plaque-swing 1s cubic-bezier(0.3, 1.6, 0.5, 1) 1.4s backwards; }
 @keyframes plaque-swing { from { transform: rotate(14deg) translateY(-20px); } }
 
 /* Les tableaux descendent en place quand on change d'écran */

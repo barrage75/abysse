@@ -1,4 +1,5 @@
-import { useRef, type PointerEvent } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import bgLab from '../assets/bg-lab.webp'
 import octoLab from '../assets/octo-lab.webp'
 import { Flask } from '../components/Flask'
 import type { StoredGameData } from '../game/storage'
@@ -14,6 +15,19 @@ const TrophyIcon = (
 const MedalIcon = (
   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 2h4l2 5 2-5h4l-4 8.2A6 6 0 1 1 10 10.2L6 2Zm6 10a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0 1.5 1 2 2.2.3-1.6 1.5.4 2.2-2-1-2 1 .4-2.2-1.6-1.5 2.2-.3 1-2Z" /></svg>
 )
+
+type IntroPhase = 'waiting' | 'intro' | 'static'
+
+let introPlayed = false
+
+function loadImage(src: string) {
+  return new Promise<void>((resolve) => {
+    const image = new Image()
+    image.onload = () => resolve()
+    image.onerror = () => resolve()
+    image.src = src
+  })
+}
 
 interface AccueilProps {
   data: StoredGameData
@@ -45,6 +59,23 @@ export function Accueil({
     .reduce((best, [, score]) => Math.max(best, score.score), 0)
   const best = Math.max(levelsBest, dailyBest)
   const homeRef = useRef<HTMLElement>(null)
+  const [phase, setPhase] = useState<IntroPhase>(() => (introPlayed ? 'static' : 'waiting'))
+
+  useEffect(() => {
+    if (phase !== 'waiting') return
+    let cancelled = false
+    const start = () => {
+      if (cancelled) return
+      introPlayed = true
+      setPhase('intro')
+    }
+    const fallback = window.setTimeout(start, 3500)
+    void Promise.all([loadImage(bgLab), loadImage(octoLab)]).then(start)
+    return () => {
+      cancelled = true
+      window.clearTimeout(fallback)
+    }
+  }, [phase])
 
   const handlePointerMove = (event: PointerEvent<HTMLElement>) => {
     const home = homeRef.current
@@ -55,7 +86,7 @@ export function Accueil({
   }
 
   return (
-    <main className="home" ref={homeRef} onPointerMove={handlePointerMove}>
+    <main className={`home is-${phase}`} ref={homeRef} onPointerMove={handlePointerMove}>
       <div className="home-scene" aria-hidden="true">
         <div className="home-bg" />
         <div className="home-octo-wrap">

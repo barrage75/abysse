@@ -68,7 +68,7 @@ h1, h2, p { margin-top: 0; }
   display: grid;
   grid-template-columns: minmax(0, 0.95fr) minmax(460px, 1.05fr);
   overflow: hidden;
-  background: var(--abyss) url('../assets/bg-home.webp') left center / cover no-repeat;
+  background: var(--abyss);
 }
 
 .home-panel {
@@ -602,7 +602,6 @@ h2 { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
 
 @media (max-width: 860px) {
   .home { grid-template-columns: 1fr; }
-  .home { background-image: url('../assets/bg-mobile.webp'); background-position: center top; background-size: cover; }
   .home-panel { grid-column: 1; justify-content: flex-start; padding: clamp(300px, 47vh, 460px) 14px 24px; }
   .flask-shelf { grid-template-columns: 1fr 1fr; width: min(100%, 440px); column-gap: 14px; }
   .home-tagline { text-shadow: 0 2px 8px rgba(0, 20, 50, 0.95); color: var(--foam); }
