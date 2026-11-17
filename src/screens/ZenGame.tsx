@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
-import octo from '../assets/octo.webp'
+import octo from '../assets/octo-chalk.webp'
 import octoSad from '../assets/octo-sad.webp'
 import { useLang } from '../i18n/useLang'
 import { localeFor, modeLabel } from '../i18n/helpers'

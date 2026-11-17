@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
-import octo from '../assets/octo.webp'
+import octo from '../assets/octo-chalk.webp'
 import octoSad from '../assets/octo-sad.webp'
 import { useLang } from '../i18n/useLang'
 import { levelName, localeFor, modeLabel } from '../i18n/helpers'
@@ -63,7 +63,7 @@ export function NiveauxGame({
         <button className="back-button" onClick={onRequestQuit}>{t.game.quit}</button>
         <span className="game-mode-label">{modeLabel(session.mode, t)}</span>
         <div className="lives" aria-label={t.game.lives(session.lives)}>
-          {Array.from({ length: 3 }, (_, index) => <span key={index} className={index < session.lives ? 'life is-live' : 'life'}>●</span>)}
+          {Array.from({ length: 3 }, (_, index) => <span key={index} className={index < session.lives ? 'life is-live' : 'life'} />)}
         </div>
       </header>
 
