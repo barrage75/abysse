@@ -35,7 +35,7 @@ Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos
 ### Chrono libre
 
 - Choisissez les opérations (**+**, **−**, **×**, **÷**) et une durée de **30, 60, 120 ou 180 secondes** ; le chrono et le score restent toujours visibles.
-- Une réponse juste passe immédiatement à la question suivante. **Passer** — ou la barre d’espace — affiche une nouvelle question sans changer le score ni la précision.
+- Une réponse juste passe immédiatement à la question suivante. **Passer** — ou la barre d’espace — coûte **3 secondes** ; la question reviendra après quelques questions, sans réduire le score.
 - Les records sont conservés par durée et combinaison d’opérations ; les résultats indiquent aussi la précision, les questions passées et la meilleure série.
 
 ### Défi du jour
@@ -85,7 +85,7 @@ React · TypeScript · Vite · Vitest · Web Audio API · Fredoka
 **ABYSSE — the mental math lab** is a solo mental-math game with local records and no remote game service.
 
 - **Levels:** six levels, three lives, and speed-based scoring.
-- **Time Attack:** choose operations and a 30–180 second timer; skip questions without losing points.
+- **Time Attack:** choose operations and a 30–180 second timer; skipping costs 3 seconds and the question returns a few questions later.
 - **Daily Challenge:** the same 20-question sequence for everyone each day; one completed run counts.
 - Animations are on by default and can be turned off with the motion button.
 

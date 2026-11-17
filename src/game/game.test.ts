@@ -13,7 +13,16 @@ import {
   STORAGE_KEY,
   type StorageLike,
 } from './storage'
-import { generateZenQuestion, validateZenConfig, type ZenConfig } from './zen'
+import {
+  applyZenSkip,
+  generateZenQuestion,
+  nextZenQuestion,
+  validateZenConfig,
+  ZEN_SKIP_PENALTY_MS,
+  type ZenConfig,
+  type ZenQuestionAdvance,
+  type ZenQuestionState,
+} from './zen'
 
 describe('randomness and dates', () => {
   it('produces the same sequence for the same seed', () => {
@@ -114,7 +123,7 @@ describe('Chrono libre', () => {
   it('uses time attack operand ranges and exact inverse division', () => {
     const rng = mulberry32(123)
     for (const op of ['+', '-', '×', '÷'] as const) {
-      for (let index = 0; index < 500; index += 1) {
+      for (let index = 0; index < 3000; index += 1) {
         const question = generateZenQuestion(rng, [op])
         const [left, right] = question.text.split(/[+−×÷]/).map((part) => Number(part.trim()))
         if (op === '+') {
@@ -122,6 +131,8 @@ describe('Chrono libre', () => {
           expect(left).toBeLessThanOrEqual(100)
           expect(right).toBeGreaterThanOrEqual(2)
           expect(right).toBeLessThanOrEqual(100)
+          expect(question.answer).toBe(left + right)
+          expect(left % 10 === 0 && right % 10 === 0).toBe(false)
         }
         if (op === '-') {
           expect(left).toBeGreaterThanOrEqual(4)
@@ -131,12 +142,16 @@ describe('Chrono libre', () => {
           expect(question.answer).toBeGreaterThanOrEqual(2)
           expect(question.answer).toBeLessThanOrEqual(100)
           expect(left - right).toBe(question.answer)
+          expect(right % 10 === 0 && question.answer % 10 === 0).toBe(false)
         }
         if (op === '×') {
           expect(left).toBeGreaterThanOrEqual(2)
           expect(left).toBeLessThanOrEqual(12)
           expect(right).toBeGreaterThanOrEqual(2)
           expect(right).toBeLessThanOrEqual(100)
+          expect(left).not.toBe(10)
+          expect(right % 10).not.toBe(0)
+          expect(question.answer).toBe(left * right)
         }
         if (op === '÷') {
           expect(right).toBeGreaterThanOrEqual(2)
@@ -144,9 +159,62 @@ describe('Chrono libre', () => {
           expect(question.answer).toBeGreaterThanOrEqual(2)
           expect(question.answer).toBeLessThanOrEqual(100)
           expect(left % right).toBe(0)
+          expect(right).not.toBe(10)
+          expect(question.answer % 10).not.toBe(0)
+          expect(question.answer).toBe(left / right)
         }
       }
     }
+  })
+
+  it('avoids repeating a question from the recent history', () => {
+    const rng = mulberry32(8675309)
+    let state: ZenQuestionState = { questionNumber: 0, recent: [], requeue: [] }
+
+    for (let index = 0; index < 200; index += 1) {
+      const next = nextZenQuestion(rng, ['+', '-', '×', '÷'], state)
+      expect(state.recent).not.toContain(next.question.text)
+      state = next
+    }
+
+    expect(state.questionNumber).toBe(200)
+  })
+
+  it('requeues a skipped question at its due question number, including a second skip', () => {
+    const rng = mulberry32(2468)
+    const question = { text: '14 × 2', answer: 28, op: '×' as const }
+    let state: ZenQuestionAdvance = {
+      question,
+      questionNumber: 1,
+      recent: [question.text],
+      requeue: [],
+    }
+
+    state = nextZenQuestion(rng, ['×'], state, question)
+    expect(state.questionNumber).toBe(2)
+    expect(state.requeue).toEqual([{ question, dueAt: 5 }])
+    state = nextZenQuestion(rng, ['×'], state)
+    state = nextZenQuestion(rng, ['×'], state)
+    state = nextZenQuestion(rng, ['×'], state)
+    expect(state.questionNumber).toBe(5)
+    expect(state.question).toEqual(question)
+    expect(state.requeue).toEqual([])
+
+    state = nextZenQuestion(rng, ['×'], state, state.question)
+    expect(state.questionNumber).toBe(6)
+    expect(state.requeue).toEqual([{ question, dueAt: 9 }])
+    state = nextZenQuestion(rng, ['×'], state)
+    state = nextZenQuestion(rng, ['×'], state)
+    state = nextZenQuestion(rng, ['×'], state)
+    expect(state.questionNumber).toBe(9)
+    expect(state.question).toEqual(question)
+    expect(state.requeue).toEqual([])
+  })
+
+  it('subtracts three seconds per skip and clamps at the current time', () => {
+    expect(ZEN_SKIP_PENALTY_MS).toBe(3000)
+    expect(applyZenSkip(10_000, 4_000)).toBe(7_000)
+    expect(applyZenSkip(6_000, 4_000)).toBe(4_000)
   })
 })
 

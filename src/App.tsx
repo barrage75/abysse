@@ -20,7 +20,13 @@ import {
   type GameRecord,
   type StoredGameData,
 } from './game/storage'
-import { generateZenQuestion, validateZenConfig, zenComboKey, type ZenConfig } from './game/zen'
+import {
+  applyZenSkip,
+  nextZenQuestion,
+  validateZenConfig,
+  zenComboKey,
+  type ZenConfig,
+} from './game/zen'
 import { useLang } from './i18n/useLang'
 import { Accueil } from './screens/Accueil'
 import { FinDePartie } from './screens/FinDePartie'
@@ -264,6 +270,8 @@ function App() {
       totalResponseMs: 0,
       responseCount: 0,
       zenWrongAttempts: 0,
+      zenRecent: [],
+      zenRequeue: [],
       dailyDate,
       skipped: 0,
     }
@@ -289,12 +297,17 @@ function App() {
     const startedAt = Date.now()
     setClock(startedAt)
     rngRef.current = mulberry32(Math.floor(Math.random() * 0xffffffff))
+    const firstQuestion = nextZenQuestion(rngRef.current, config.operations, {
+      questionNumber: 0,
+      recent: [],
+      requeue: [],
+    })
     const nextSession: GameSession = {
       mode: 'Chrono libre',
       startingLevel: 1,
       level: 1,
-      question: generateZenQuestion(rngRef.current, config.operations),
-      questionNumber: 1,
+      question: firstQuestion.question,
+      questionNumber: firstQuestion.questionNumber,
       score: 0,
       lives: 0,
       correct: 0,
@@ -312,6 +325,8 @@ function App() {
       duration: config.duration,
       operations: config.operations,
       zenWrongAttempts: 0,
+      zenRecent: firstQuestion.recent,
+      zenRequeue: firstQuestion.requeue,
       skipped: 0,
     }
     finalizedRef.current = false
@@ -499,10 +514,17 @@ function App() {
       clearWrongClearTimeout()
       const now = Date.now()
       const elapsed = Math.max(0, now - session.questionStartedAt)
+      const next = nextZenQuestion(rngRef.current, session.operations ?? ['+'], {
+        questionNumber: session.questionNumber,
+        recent: session.zenRecent,
+        requeue: session.zenRequeue,
+      })
       setSession({
         ...session,
-        question: generateZenQuestion(rngRef.current, session.operations ?? ['+']),
-        questionNumber: session.questionNumber + 1,
+        question: next.question,
+        questionNumber: next.questionNumber,
+        zenRecent: next.recent,
+        zenRequeue: next.requeue,
         score: session.score + 1,
         correct: session.correct + 1,
         streak: session.streak + 1,
@@ -539,22 +561,34 @@ function App() {
 
   const handleZenSkip = useCallback(() => {
     if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
-    if (session.deadline && Date.now() >= session.deadline) {
+    const now = Date.now()
+    if (session.deadline && now >= session.deadline) {
       finishGame(session)
       return
     }
     clearWrongClearTimeout()
     wrongCurrentRef.current = ''
     setAnswer('')
-    setSession({
+    const next = nextZenQuestion(rngRef.current, session.operations ?? ['+'], {
+      questionNumber: session.questionNumber,
+      recent: session.zenRecent,
+      requeue: session.zenRequeue,
+    }, session.question)
+    const deadline = applyZenSkip(session.deadline ?? now, now)
+    const nextSession = {
       ...session,
-      question: generateZenQuestion(rngRef.current, session.operations ?? ['+']),
-      questionNumber: session.questionNumber + 1,
+      question: next.question,
+      questionNumber: next.questionNumber,
+      zenRecent: next.recent,
+      zenRequeue: next.requeue,
+      deadline,
       skipped: session.skipped + 1,
       streak: 0,
-      questionStartedAt: Date.now(),
-    })
+      questionStartedAt: now,
+    }
+    setSession(nextSession)
     triggerFx('skip')
+    if (deadline <= now) finishGame(nextSession)
   }, [session, finishGame, clearWrongClearTimeout, triggerFx])
 
   useEffect(() => {

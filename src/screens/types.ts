@@ -1,6 +1,6 @@
 import type { Question, Operation } from '../game/questions'
 import type { GameMode } from '../game/storage'
-import type { ZenDuration } from '../game/zen'
+import type { ZenDuration, ZenRequeueItem } from '../game/zen'
 
 export interface GameSession {
   mode: GameMode
@@ -25,6 +25,8 @@ export interface GameSession {
   duration?: ZenDuration
   operations?: Operation[]
   zenWrongAttempts: number
+  zenRecent: string[]
+  zenRequeue: ZenRequeueItem[]
   dailyDate?: string
   skipped: number
 }
