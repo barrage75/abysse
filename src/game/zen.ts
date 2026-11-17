@@ -8,8 +8,6 @@ export type ZenDuration = (typeof ZEN_DURATIONS)[number]
 export interface ZenConfig {
   operations: Operation[]
   duration: ZenDuration
-  showTimer: boolean
-  showScore: boolean
 }
 
 export interface ZenErrors {

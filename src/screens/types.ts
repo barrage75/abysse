@@ -24,10 +24,9 @@ export interface GameSession {
   deadline?: number
   duration?: ZenDuration
   operations?: Operation[]
-  showTimer?: boolean
-  showScore?: boolean
   zenWrongAttempts: number
   dailyDate?: string
+  skipped: number
 }
 
 export interface GameResult {
@@ -43,4 +42,12 @@ export interface GameResult {
   highestLevel: number
   duration?: number
   isNewRecord: boolean
+  skipped: number
+}
+
+export type FxKind = 'correct' | 'wrong' | 'timeout' | 'levelup' | 'skip'
+
+export interface Fx {
+  kind: FxKind
+  id: number
 }

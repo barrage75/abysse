@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { ACHIEVEMENTS, evaluate, type AchievementStats } from './achievements'
-import { createDailyRun } from './daily'
+import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion } from './daily'
 import { LEVELS } from './levels'
 import { generateQuestion, configFromLevel } from './questions'
 import { mulberry32, seedFromDate } from './rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './scoring'
-import { emptyGameData, readGameData, STORAGE_KEY, type StorageLike } from './storage'
+import {
+  emptyGameData,
+  isDailyPlayed,
+  readGameData,
+  saveGameRecord,
+  STORAGE_KEY,
+  type StorageLike,
+} from './storage'
 import { generateZenQuestion, validateZenConfig, type ZenConfig } from './zen'
 
 describe('randomness and dates', () => {
@@ -21,13 +28,15 @@ describe('randomness and dates', () => {
   })
 
   it('generates the same daily question sequence for everyone on the same date', () => {
-    const date = new Date(2025, 4, 8)
-    const first = createDailyRun(date)
-    const second = createDailyRun(date)
-    const config = configFromLevel(LEVELS[2])
-    expect(
-      Array.from({ length: 25 }, () => generateQuestion(first.rng, config)),
-    ).toEqual(Array.from({ length: 25 }, () => generateQuestion(second.rng, config)))
+    const firstDate = new Date(2025, 4, 8)
+    const otherDate = new Date(2025, 4, 9)
+    const first = Array.from({ length: DAILY_QUESTION_COUNT }, (_, index) => dailyQuestion(firstDate, index))
+    const repeated = Array.from({ length: DAILY_QUESTION_COUNT }, (_, index) => dailyQuestion(firstDate, index))
+    const other = Array.from({ length: DAILY_QUESTION_COUNT }, (_, index) => dailyQuestion(otherDate, index))
+    expect(first).toEqual(repeated)
+    expect(first).not.toEqual(other)
+    expect(DAILY_LEVEL_SCHEDULE).toHaveLength(20)
+    expect(DAILY_QUESTION_COUNT).toBe(20)
   })
 })
 
@@ -94,8 +103,6 @@ describe('Chrono libre', () => {
   const baseConfig: ZenConfig = {
     operations: ['+'],
     duration: 60,
-    showTimer: true,
-    showScore: true,
   }
 
   it('requires at least one operation and accepts supported durations', () => {
@@ -200,5 +207,28 @@ describe('local storage', () => {
       setItem: () => undefined,
     }
     expect(readGameData(storage)).toEqual(emptyGameData())
+  })
+
+  it('locks a daily challenge only after saving a finished result', () => {
+    let value = JSON.stringify({
+      ...emptyGameData(),
+      dailyResults: [{ date: '2025-05-08' }],
+    })
+    const storage: StorageLike = {
+      getItem: (key) => key === STORAGE_KEY ? value : null,
+      setItem: (_key, nextValue) => { value = nextValue },
+    }
+    expect(isDailyPlayed('2025-05-08', storage)).toBe(false)
+
+    saveGameRecord({
+      mode: 'Défi Quotidien',
+      score: 650,
+      date: '2025-05-08',
+      accuracy: 80,
+      averageResponseTime: 4,
+      bestStreak: 5,
+    }, storage)
+
+    expect(isDailyPlayed('2025-05-08', storage)).toBe(true)
   })
 })

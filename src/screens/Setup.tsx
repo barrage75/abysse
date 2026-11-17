@@ -36,6 +36,38 @@ export function NiveauxSetup({ onStart, onBack }: NiveauxSetupProps) {
   )
 }
 
+interface DailySetupProps {
+  onStart: () => void
+  onBack: () => void
+  date: Date
+}
+
+export function DailySetup({ onStart, onBack, date }: DailySetupProps) {
+  const longDate = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+  const formattedDate = longDate.charAt(0).toLocaleUpperCase('fr-FR') + longDate.slice(1)
+
+  return (
+    <main className="page-shell setup-page">
+      <button className="back-button" onClick={onBack}>← Accueil</button>
+      <p className="eyebrow">Défi du jour</p>
+      <h1>La série du jour</h1>
+      <p className="page-intro">Une série unique pour le {formattedDate}.</p>
+      <ul className="rules-list">
+        <li>20 questions, les mêmes pour tout le monde aujourd'hui</li>
+        <li>3 vies</li>
+        <li>Plus tu réponds vite, plus tu gagnes de points</li>
+        <li>Une seule partie terminée par jour</li>
+      </ul>
+      <button className="button button-primary setup-start" onClick={onStart}>Commencer</button>
+    </main>
+  )
+}
+
 interface ZenSetupProps {
   onStart: (config: ZenConfig) => void
   onBack: () => void
@@ -51,8 +83,6 @@ const OPERATIONS: { value: Operation; label: string }[] = [
 export function ZenSetup({ onStart, onBack }: ZenSetupProps) {
   const [operations, setOperations] = useState<Operation[]>(['+', '-'])
   const [duration, setDuration] = useState<ZenDuration>(60)
-  const [showTimer, setShowTimer] = useState(true)
-  const [showScore, setShowScore] = useState(true)
   const [error, setError] = useState('')
 
   function toggleOperation(operation: Operation) {
@@ -104,10 +134,6 @@ export function ZenSetup({ onStart, onBack }: ZenSetupProps) {
         </div>
       </fieldset>
 
-      <div className="toggle-options">
-        <label><input type="checkbox" checked={showTimer} onChange={(event) => setShowTimer(event.target.checked)} /> Afficher le chrono</label>
-        <label><input type="checkbox" checked={showScore} onChange={(event) => setShowScore(event.target.checked)} /> Afficher le score</label>
-      </div>
       <button
         className="button button-primary setup-start"
         onClick={() => {
@@ -115,7 +141,7 @@ export function ZenSetup({ onStart, onBack }: ZenSetupProps) {
             setError('Choisissez au moins une opération.')
             return
           }
-          onStart({ operations, duration, showTimer, showScore })
+          onStart({ operations, duration })
         }}
       >
         Commencer

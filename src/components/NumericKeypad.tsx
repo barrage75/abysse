@@ -6,8 +6,9 @@ interface NumericKeypadProps {
   onClear: () => void
 }
 
-export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadProps) {
-  const [isTouch, setIsTouch] = useState(false)
+// oxlint-disable-next-line react/only-export-components
+export function useIsTouch() {
+  const [isTouch, setIsTouch] = useState(() => window.matchMedia('(pointer: coarse)').matches)
 
   useEffect(() => {
     const query = window.matchMedia('(pointer: coarse)')
@@ -17,6 +18,11 @@ export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadPr
     return () => query.removeEventListener('change', update)
   }, [])
 
+  return isTouch
+}
+
+export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadProps) {
+  const isTouch = useIsTouch()
   if (!isTouch) return null
 
   return (

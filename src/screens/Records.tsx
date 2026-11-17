@@ -10,6 +10,17 @@ const MODE_LABELS: Record<string, string> = {
   'Défi Quotidien': 'Défi Quotidien',
 }
 
+function formatZenBest(key: string): string {
+  const value = key.slice('Chrono libre:'.length)
+  const separator = value.indexOf('-')
+  if (separator < 0) return 'Chrono libre'
+  const duration = value.slice(0, separator)
+  const operations = [...value.slice(separator + 1)]
+    .map((operation) => operation === '-' ? '−' : operation)
+    .join(' ')
+  return `Chrono libre, ${duration} s, ${operations}`
+}
+
 export function Records({ data, onBack }: RecordsProps) {
   const bests = Object.entries(data.bestScores)
   return (
@@ -24,7 +35,7 @@ export function Records({ data, onBack }: RecordsProps) {
           <div className="best-list">
             {bests.map(([key, value]) => (
               <div className="best-row" key={key}>
-                <span>{key.startsWith('Chrono libre:') ? `Chrono libre · ${key.slice('Chrono libre:'.length).replace('-', ' s · ')}` : MODE_LABELS[key] ?? key}</span>
+                <span>{key.startsWith('Chrono libre:') ? formatZenBest(key) : MODE_LABELS[key] ?? key}</span>
                 <strong>{value.score}</strong>
               </div>
             ))}

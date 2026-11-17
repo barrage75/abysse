@@ -115,16 +115,7 @@ export function saveGameRecord(
 }
 
 export function isDailyPlayed(date: string, storage?: StorageLike): boolean {
-  return readGameData(storage).dailyResults.some((result) => result.date === date)
-}
-
-export function lockDailyChallenge(date: string, storage?: StorageLike): StoredGameData {
-  const data = readGameData(storage)
-  if (!data.dailyResults.some((result) => result.date === date)) {
-    data.dailyResults = [...data.dailyResults, { date }]
-    writeGameData(data, storage)
-  }
-  return data
+  return readGameData(storage).dailyResults.some((result) => result.date === date && result.score !== undefined)
 }
 
 export function unlockAchievements(

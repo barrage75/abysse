@@ -14,6 +14,7 @@ const MedalIcon = (
 interface AccueilProps {
   data: StoredGameData
   dailyPlayed: boolean
+  dailyScore?: number
   onLevels: () => void
   onZen: () => void
   onDaily: () => void
@@ -24,6 +25,7 @@ interface AccueilProps {
 export function Accueil({
   data,
   dailyPlayed,
+  dailyScore,
   onLevels,
   onZen,
   onDaily,
@@ -65,7 +67,7 @@ export function Accueil({
             color="#9dff3a"
             label="Défi du jour"
             icon="✦"
-            detail={dailyPlayed ? 'Reviens demain' : 'Même série pour tous'}
+            detail={dailyPlayed ? `Score du jour : ${dailyScore ?? 0}` : 'Même série pour tous'}
             disabled={dailyPlayed}
             onClick={onDaily}
           />
