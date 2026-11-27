@@ -7,6 +7,7 @@ import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
 import { getLevel } from './game/levels'
 import { configFromLevel, nextLevelQuestion } from './game/questions'
+import { recordMissed } from './game/review'
 import { dateKey, mulberry32, type RandomSource } from './game/rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './game/scoring'
 import { readMotionEnabled, setMotionEnabled } from './game/motion'
@@ -630,6 +631,12 @@ function App() {
           ...session,
           zenWrongAttempts: session.zenWrongAttempts + 1,
           streak: 0,
+          missed: recordMissed(session.missed, {
+            text: session.question.text,
+            answer: session.question.answer,
+            given: value,
+            reason: 'wrong',
+          }),
         })
         triggerFx('wrong')
         clearWrongClearTimeout()
@@ -711,8 +718,8 @@ function App() {
         return
       }
       if (session?.mode === 'Chrono libre' && event.code === 'Space') {
-        event.preventDefault()
         if (quitConfirm || pausedAtRef.current !== null) return
+        event.preventDefault()
         if (!event.repeat) handleZenSkip()
         return
       }
