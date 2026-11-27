@@ -124,7 +124,9 @@ export function NiveauxGame({
           submitLabel={t.game.submit}
           disabled={quitConfirm}
         />
-        {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span> : null}
+        {(fx?.kind === 'correct' || fx?.kind === 'levelup') && fx?.points !== undefined
+          ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span>
+          : null}
       </section>
       {!isDaily && <p className="game-hint">{t.game.pointsSpeed}</p>}
       {quitConfirm && (

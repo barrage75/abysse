@@ -574,16 +574,16 @@ function App() {
       : scored.label === 'Rapide'
         ? t.game.fast
         : t.game.normal)
+    triggerFx('correct', scored.points)
     if (progress.leveledUp && !isDaily) {
       clearLevelUpTimeout()
       setLevelUp(true)
-      triggerFx('levelup')
+      triggerFx('levelup', scored.points)
       levelUpTimeoutRef.current = window.setTimeout(() => {
         levelUpTimeoutRef.current = null
         setLevelUp(false)
       }, 1800)
     }
-    triggerFx('correct', scored.points)
   }
 
   function handleZenAnswer(value: string) {
