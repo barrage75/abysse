@@ -8,13 +8,21 @@ Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos
 
 ## Aperçu
 
+<p align="center">
+  <strong>Une partie en mode Niveaux</strong> — chaque calcul reste lisible, avec les points gagnés et la liste « À revoir » à la fin<br>
+  <img src="docs/media/levels.webp" alt="Partie complète en mode Niveaux" width="720">
+</p>
+
+<p align="center">
+  <strong>Chrono libre (30 s, les quatre opérations)</strong><br>
+  <img src="docs/media/time-attack.webp" alt="Partie complète en mode Chrono libre" width="720">
+</p>
+
+<p align="center"><a href="docs/media/demo.mp4">▶ Voir la vidéo de démo complète (1 min 30)</a></p>
+
 <table>
   <tr>
     <td align="center"><strong>Accueil</strong><br><img src="docs/media/home.gif" alt="Accueil animé" width="420"></td>
-    <td align="center"><strong>Niveaux</strong><br><img src="docs/media/levels.gif" alt="Partie en mode Niveaux" width="420"></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>Chrono libre</strong><br><img src="docs/media/time-attack.gif" alt="Partie en mode Chrono libre" width="420"></td>
     <td align="center"><strong>Défi du jour</strong><br><img src="docs/media/daily.gif" alt="Présentation et partie du défi quotidien" width="420"></td>
   </tr>
 </table>
@@ -50,7 +58,10 @@ Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos
 - Sons synthétisés activables ou non, compte à rebours avant chaque partie et badges de combo.
 - Succès, records et historique conservés localement ; partage du résultat quotidien.
 - Pensé pour jouer sans compte ni service distant : aucune API de jeu, progression stockée dans le navigateur.
-- Interface responsive et pavé numérique tactile ; animations activées par défaut, désactivables avec le bouton dédié.
+- Interface responsive et pavé numérique tactile avec bouton **Valider** ; animations activées par défaut, désactivables avec le bouton dédié.
+- Les points gagnés s’affichent à chaque bonne réponse et la barre de temps passe au rouge quand il reste peu de temps.
+- La fenêtre « Quitter ? » met la partie en pause : le chrono s’arrête et la question est masquée.
+- En fin de partie, la liste **À revoir** montre les calculs ratés, passés ou hors délai avec la bonne réponse.
 
 ## Lancer le jeu
 
@@ -88,5 +99,6 @@ React · TypeScript · Vite · Vitest · Web Audio API · Fredoka
 - **Time Attack:** choose operations and a 30–180 second timer; skipping costs 3 seconds and the question returns a few questions later.
 - **Daily Challenge:** the same 20-question sequence for everyone each day; one completed run counts.
 - Animations are on by default and can be turned off with the motion button.
+- Points pop up after each correct answer, the quit dialog pauses the game, and the results screen lists the questions to review.
 
 Run locally with `npm install` and `npm run dev`; build with `npm run build` and test with `npm test`.

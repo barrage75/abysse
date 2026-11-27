@@ -3,6 +3,7 @@ import bgLab from '../assets/bg-lab.webp'
 import octoLab from '../assets/octo-lab.webp'
 import { preloadScreenAssets } from '../assets/preload'
 import { Flask } from '../components/Flask'
+import { ACHIEVEMENTS } from '../game/achievements'
 import type { StoredGameData } from '../game/storage'
 import { useLang } from '../i18n/useLang'
 import { localeFor } from '../i18n/helpers'
@@ -134,7 +135,7 @@ export function Accueil({
             color="#ff5fb4"
             label={t.home.achievementsLabel}
             icon={MedalIcon}
-            detail={t.home.achievementCount(data.achievements.length)}
+            detail={t.home.achievementCount(data.achievements.length, ACHIEVEMENTS.length)}
             onClick={onAchievements}
           />
         </nav>

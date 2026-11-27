@@ -40,10 +40,11 @@ export interface StoredGameData {
   achievements: UnlockedAchievement[]
   dailyResults: DailyResult[]
   history: GameRecord[]
+  levelsBestAdjusted?: true
 }
 
 export function emptyGameData(): StoredGameData {
-  return { version: 1, bestScores: {}, achievements: [], dailyResults: [], history: [] }
+  return { version: 1, bestScores: {}, achievements: [], dailyResults: [], history: [], levelsBestAdjusted: true }
 }
 
 export interface StorageLike {
@@ -57,12 +58,33 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeGameData(value: unknown): StoredGameData {
   if (!isRecord(value) || value.version !== 1) return emptyGameData()
+  const bestScores = isRecord(value.bestScores) ? value.bestScores as Record<string, BestScore> : {}
+  const history = Array.isArray(value.history) ? value.history.slice(0, 50) as GameRecord[] : []
+
+  if (value.levelsBestAdjusted !== true) {
+    const previous = bestScores.Niveaux
+    const bestRun = history
+      .filter((record) => record.mode === 'Niveaux')
+      .reduce<GameRecord | undefined>((best, record) => (
+        !best || (record.adjustedScore ?? record.score) > (best.adjustedScore ?? best.score)
+          ? record
+          : best
+      ), undefined)
+    if (bestRun) {
+      const score = bestRun.adjustedScore ?? bestRun.score
+      if (!previous || score > previous.score) {
+        bestScores.Niveaux = { score, date: bestRun.date, accuracy: bestRun.accuracy }
+      }
+    }
+  }
+
   return {
     version: 1,
-    bestScores: isRecord(value.bestScores) ? value.bestScores as Record<string, BestScore> : {},
+    bestScores,
     achievements: Array.isArray(value.achievements) ? value.achievements as UnlockedAchievement[] : [],
     dailyResults: Array.isArray(value.dailyResults) ? value.dailyResults as DailyResult[] : [],
-    history: Array.isArray(value.history) ? value.history.slice(0, 50) as GameRecord[] : [],
+    history,
+    levelsBestAdjusted: true,
   }
 }
 
@@ -99,11 +121,14 @@ export function saveGameRecord(
   const data = readGameData(storage)
   const key = bestScoreKey(record)
   const previous = data.bestScores[key]
-  const isNewRecord = !previous || record.score > previous.score
+  const bestScore = record.mode === 'Niveaux'
+    ? record.adjustedScore ?? record.score
+    : record.score
+  const isNewRecord = !previous || bestScore > previous.score
 
   data.history = [record, ...data.history].slice(0, 50)
   if (isNewRecord) {
-    data.bestScores[key] = { score: record.score, date: record.date, accuracy: record.accuracy }
+    data.bestScores[key] = { score: bestScore, date: record.date, accuracy: record.accuracy }
   }
   if (record.mode === 'Défi Quotidien') {
     const existingDaily = data.dailyResults.find((item) => item.date === record.date)

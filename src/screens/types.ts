@@ -27,8 +27,17 @@ export interface GameSession {
   zenWrongAttempts: number
   zenRecent: string[]
   zenRequeue: ZenRequeueItem[]
+  recentQuestions: string[]
+  missed: MissedQuestion[]
   dailyDate?: string
   skipped: number
+}
+
+export interface MissedQuestion {
+  text: string
+  answer: number
+  given?: string
+  reason: 'wrong' | 'timeout' | 'skipped'
 }
 
 export interface GameResult {
@@ -46,6 +55,7 @@ export interface GameResult {
   duration?: number
   isNewRecord: boolean
   skipped: number
+  missed: MissedQuestion[]
 }
 
 export type FxKind = 'correct' | 'wrong' | 'timeout' | 'levelup' | 'skip'
@@ -53,4 +63,5 @@ export type FxKind = 'correct' | 'wrong' | 'timeout' | 'levelup' | 'skip'
 export interface Fx {
   kind: FxKind
   id: number
+  points?: number
 }

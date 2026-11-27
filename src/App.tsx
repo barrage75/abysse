@@ -6,7 +6,8 @@ import { Decor } from './components/Decor'
 import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
 import { getLevel } from './game/levels'
-import { configFromLevel, generateQuestion } from './game/questions'
+import { configFromLevel, nextLevelQuestion } from './game/questions'
+import { recordMissed, resolveSkipped } from './game/review'
 import { dateKey, mulberry32, type RandomSource } from './game/rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './game/scoring'
 import { readMotionEnabled, setMotionEnabled } from './game/motion'
@@ -68,7 +69,9 @@ function App() {
   const [soundOn, setSoundOn] = useState(readSoundEnabled)
   const [motionOn, setMotionOn] = useState(readMotionEnabled)
   const [countdownValue, setCountdownValue] = useState<number | 'dive' | null>(null)
-  const [clock, setClock] = useState(Date.now())
+  const [clock, setClock] = useState(() => Date.now())
+  const [currentDate, setCurrentDate] = useState(() => dateKey(new Date()))
+  const [pausedAt, setPausedAt] = useState<number | null>(null)
   const [dailySetupDate, setDailySetupDate] = useState<Date | null>(null)
   const [countdownReturnScreen, setCountdownReturnScreen] = useState<Screen>('home')
   const dismissToast = useCallback(() => setToast([]), [])
@@ -79,10 +82,11 @@ function App() {
   const wrongClearTimeoutRef = useRef<number | null>(null)
   const fxIdRef = useRef(0)
   const hiddenAtRef = useRef<number | null>(null)
+  const pausedAtRef = useRef<number | null>(null)
+  const levelUpTimeoutRef = useRef<number | null>(null)
   const lastSetupRef = useRef<LastSetup | null>(null)
   const pendingGameRef = useRef<LastSetup | null>(null)
 
-  const currentDate = dateKey(new Date())
   const dailyPlayed = isDailyPlayed(currentDate)
   const todayDailyScore = storedData.dailyResults.find((daily) => daily.date === currentDate)?.score
   const bestAdjustedNiveauxScore = storedData.history.reduce(
@@ -97,19 +101,58 @@ function App() {
       operations: session.operations ?? [],
     })}`]?.score ?? 0
     : 0
+  const displayedClock = pausedAt ?? clock
   const remainingSeconds = session?.mode === 'Chrono libre' && session.deadline
-    ? Math.max(0, (session.deadline - clock) / 1000)
+    ? Math.max(0, (session.deadline - displayedClock) / 1000)
     : session
-      ? Math.max(0, session.timeLimitSeconds - (clock - session.questionStartedAt) / 1000)
+      ? Math.max(0, session.timeLimitSeconds - (displayedClock - session.questionStartedAt) / 1000)
       : 0
+
+  const clearLevelUpTimeout = useCallback(() => {
+    if (levelUpTimeoutRef.current !== null) {
+      window.clearTimeout(levelUpTimeoutRef.current)
+      levelUpTimeoutRef.current = null
+    }
+  }, [])
+
+  const openQuitConfirm = useCallback(() => {
+    if (pausedAtRef.current !== null) return
+    const now = Date.now()
+    pausedAtRef.current = now
+    setPausedAt(now)
+    setQuitConfirm(true)
+  }, [])
+
+  const closeQuitConfirm = useCallback(() => {
+    const pausedAt = pausedAtRef.current
+    if (pausedAt === null) {
+      setQuitConfirm(false)
+      return
+    }
+    const resumedAt = Date.now()
+    const pausedDuration = resumedAt - pausedAt
+    pausedAtRef.current = null
+    setPausedAt(null)
+    setSession((current) => current ? {
+      ...current,
+      questionStartedAt: current.questionStartedAt + pausedDuration,
+      deadline: current.mode === 'Chrono libre' && current.deadline
+        ? current.deadline + pausedDuration
+        : current.deadline,
+    } : current)
+    setQuitConfirm(false)
+    setClock(resumedAt)
+  }, [])
+
+  useEffect(() => () => clearLevelUpTimeout(), [clearLevelUpTimeout])
 
   useEffect(() => {
     if (screen !== 'game') return
     const interval = window.setInterval(() => {
-      if (!document.hidden) setClock(Date.now())
+      if (!document.hidden && pausedAtRef.current === null) setClock(Date.now())
     }, 100)
     return () => window.clearInterval(interval)
-  }, [screen])
+  }, [screen, quitConfirm])
 
   useEffect(() => {
     if (screen !== 'game' || session?.mode === 'Chrono libre') {
@@ -118,12 +161,14 @@ function App() {
     }
     const onVisibilityChange = () => {
       if (document.hidden) {
+        if (pausedAtRef.current !== null) return
         if (hiddenAtRef.current === null) hiddenAtRef.current = Date.now()
         return
       }
       if (hiddenAtRef.current === null) return
       const hiddenDuration = Date.now() - hiddenAtRef.current
       hiddenAtRef.current = null
+      if (pausedAtRef.current !== null) return
       setSession((current) => {
         if (!current || current.mode === 'Chrono libre') return current
         return { ...current, questionStartedAt: current.questionStartedAt + hiddenDuration }
@@ -145,9 +190,9 @@ function App() {
     return () => window.clearTimeout(timeout)
   }, [fx])
 
-  const triggerFx = useCallback((kind: FxKind) => {
+  const triggerFx = useCallback((kind: FxKind, points?: number) => {
     fxIdRef.current += 1
-    setFx({ kind, id: fxIdRef.current })
+    setFx({ kind, id: fxIdRef.current, points })
     playSound(kind)
   }, [])
 
@@ -239,6 +284,7 @@ function App() {
       duration: current.duration,
       isNewRecord: saved.isNewRecord,
       skipped: current.skipped,
+      missed: current.missed,
     })
     setScreen('results')
   }, [])
@@ -252,11 +298,13 @@ function App() {
     const mode: GameMode = daily ? 'Défi Quotidien' : 'Niveaux'
     rngRef.current = mulberry32(Math.floor(Math.random() * 0xffffffff))
     const level = getLevel(chosenLevel)
+    const firstQuestion = firstDailyQuestion?.question
+      ?? nextLevelQuestion(rngRef.current, configFromLevel(level), [])
     const nextSession: GameSession = {
       mode,
       startingLevel: chosenLevel,
       level: chosenLevel,
-      question: firstDailyQuestion?.question ?? generateQuestion(rngRef.current, configFromLevel(level)),
+      question: firstQuestion,
       questionNumber: 1,
       score: 0,
       lives: 3,
@@ -274,12 +322,17 @@ function App() {
       zenWrongAttempts: 0,
       zenRecent: [],
       zenRequeue: [],
+      recentQuestions: mode === 'Niveaux' ? [firstQuestion.text] : [],
+      missed: [],
       dailyDate,
       skipped: 0,
     }
     finalizedRef.current = false
     timedOutQuestionRef.current = -1
     wrongCurrentRef.current = ''
+    pausedAtRef.current = null
+    setPausedAt(null)
+    clearLevelUpTimeout()
     setSession(nextSession)
     setResult(null)
     setAnswer('')
@@ -292,7 +345,7 @@ function App() {
     clearWrongClearTimeout()
     lastSetupRef.current = daily ? { mode: 'Défi Quotidien' } : { mode: 'Niveaux', startingLevel }
     setScreen('game')
-  }, [clearWrongClearTimeout])
+  }, [clearWrongClearTimeout, clearLevelUpTimeout])
 
   const launchZen = useCallback((config: ZenConfig) => {
     if (Object.keys(validateZenConfig(config)).length > 0) return
@@ -329,15 +382,21 @@ function App() {
       zenWrongAttempts: 0,
       zenRecent: firstQuestion.recent,
       zenRequeue: firstQuestion.requeue,
+      recentQuestions: [],
+      missed: [],
       skipped: 0,
     }
     finalizedRef.current = false
     timedOutQuestionRef.current = -1
     wrongCurrentRef.current = ''
+    pausedAtRef.current = null
+    setPausedAt(null)
+    clearLevelUpTimeout()
     setSession(nextSession)
     setResult(null)
     setAnswer('')
     setFeedback('')
+    setLevelUp(false)
     setToast([])
     setFx(null)
     setQuitConfirm(false)
@@ -345,7 +404,7 @@ function App() {
     clearWrongClearTimeout()
     lastSetupRef.current = { mode: 'Chrono libre', config }
     setScreen('game')
-  }, [clearWrongClearTimeout])
+  }, [clearWrongClearTimeout, clearLevelUpTimeout])
 
   const beginCountdown = useCallback((pending: LastSetup, returnScreen: Screen) => {
     pendingGameRef.current = pending
@@ -399,7 +458,7 @@ function App() {
   }, [countdownValue, launchLevels, launchZen])
 
   const handleNiveauxMistake = useCallback((timedOut = false) => {
-    if (!session || session.mode === 'Chrono libre' || finalizedRef.current) return
+    if (!session || session.mode === 'Chrono libre' || finalizedRef.current || pausedAtRef.current !== null) return
     clearWrongClearTimeout()
     const now = Date.now()
     const elapsed = timedOut
@@ -418,6 +477,12 @@ function App() {
       questionStartedAt: now,
       totalResponseMs: session.totalResponseMs + elapsed,
       responseCount: session.responseCount + 1,
+      missed: [...session.missed, {
+        text: question.text,
+        answer: question.answer,
+        ...(!timedOut ? { given: answer } : {}),
+        reason: timedOut ? 'timeout' : 'wrong',
+      }],
     }
     const dailyFinished = session.mode === 'Défi Quotidien'
       && session.questionNumber >= DAILY_QUESTION_COUNT
@@ -433,7 +498,12 @@ function App() {
       updated.highestLevel = Math.max(updated.highestLevel, next.levelId)
       updated.timeLimitSeconds = getLevel(next.levelId).secondsPerQuestion
     } else {
-      updated.question = generateQuestion(rngRef.current, configFromLevel(getLevel(updated.level)))
+      updated.question = nextLevelQuestion(
+        rngRef.current,
+        configFromLevel(getLevel(updated.level)),
+        session.recentQuestions,
+      )
+      updated.recentQuestions = [...session.recentQuestions, updated.question.text].slice(-5)
     }
     setSession(updated)
     setAnswer('')
@@ -441,10 +511,11 @@ function App() {
       ? t.game.timeout(question.text, question.answer)
       : t.game.wrong(question.text, question.answer))
     triggerFx(timedOut ? 'timeout' : 'wrong')
-  }, [session, clearWrongClearTimeout, triggerFx, finishGame, t])
+  }, [session, answer, clearWrongClearTimeout, triggerFx, finishGame, t])
 
   function submitNiveauxAnswer() {
-    if (!session || session.mode === 'Chrono libre' || finalizedRef.current) return
+    if (!session || session.mode === 'Chrono libre' || finalizedRef.current
+      || quitConfirm || pausedAtRef.current !== null) return
     if (answer === '') return
     const elapsed = (Date.now() - session.questionStartedAt) / 1000
     if (elapsed >= session.timeLimitSeconds) {
@@ -469,11 +540,12 @@ function App() {
       : undefined
     const nextLevel = scheduled?.levelId ?? progress.level
     const lightningStreak = scored.label === 'Éclair' ? session.lightningStreak + 1 : 0
+    const nextQuestion = scheduled?.question ?? (dailyFinished
+      ? session.question
+      : nextLevelQuestion(rngRef.current, configFromLevel(getLevel(nextLevel)), session.recentQuestions))
     const nextSession: GameSession = {
       ...session,
-      question: scheduled?.question ?? (dailyFinished
-        ? session.question
-        : generateQuestion(rngRef.current, configFromLevel(getLevel(nextLevel)))),
+      question: nextQuestion,
       questionNumber: dailyFinished ? session.questionNumber : session.questionNumber + 1,
       level: nextLevel,
       score: session.score + scored.points,
@@ -487,9 +559,12 @@ function App() {
       timeLimitSeconds: getLevel(nextLevel).secondsPerQuestion,
       totalResponseMs: session.totalResponseMs + elapsed * 1000,
       responseCount: session.responseCount + 1,
+      recentQuestions: !isDaily && !dailyFinished
+        ? [...session.recentQuestions, nextQuestion.text].slice(-5)
+        : session.recentQuestions,
     }
-    triggerFx('correct')
     if (dailyFinished) {
+      triggerFx('correct', scored.points)
       finishGame(nextSession)
       return
     }
@@ -500,14 +575,20 @@ function App() {
       : scored.label === 'Rapide'
         ? t.game.fast
         : t.game.normal)
+    triggerFx('correct', scored.points)
     if (progress.leveledUp && !isDaily) {
+      clearLevelUpTimeout()
       setLevelUp(true)
-      triggerFx('levelup')
-      window.setTimeout(() => setLevelUp(false), 1800)
+      triggerFx('levelup', scored.points)
+      levelUpTimeoutRef.current = window.setTimeout(() => {
+        levelUpTimeoutRef.current = null
+        setLevelUp(false)
+      }, 1800)
     }
   }
 
   function handleZenAnswer(value: string) {
+    if (quitConfirm || pausedAtRef.current !== null) return
     setAnswer(value)
     if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
     const answerLength = String(session.question.answer).length
@@ -527,6 +608,7 @@ function App() {
         questionNumber: next.questionNumber,
         zenRecent: next.recent,
         zenRequeue: next.requeue,
+        missed: resolveSkipped(session.missed, session.question.text),
         score: session.score + 1,
         correct: session.correct + 1,
         streak: session.streak + 1,
@@ -535,7 +617,7 @@ function App() {
         totalResponseMs: session.totalResponseMs + elapsed,
         responseCount: session.responseCount + 1,
       })
-      triggerFx('correct')
+      triggerFx('correct', 1)
       setAnswer('')
       wrongCurrentRef.current = ''
       return
@@ -549,6 +631,12 @@ function App() {
           ...session,
           zenWrongAttempts: session.zenWrongAttempts + 1,
           streak: 0,
+          missed: recordMissed(session.missed, {
+            text: session.question.text,
+            answer: session.question.answer,
+            given: value,
+            reason: 'wrong',
+          }),
         })
         triggerFx('wrong')
         clearWrongClearTimeout()
@@ -562,7 +650,8 @@ function App() {
   }
 
   const handleZenSkip = useCallback(() => {
-    if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
+    if (!session || session.mode !== 'Chrono libre' || finalizedRef.current
+      || quitConfirm || pausedAtRef.current !== null) return
     const now = Date.now()
     if (session.deadline && now >= session.deadline) {
       finishGame(session)
@@ -587,14 +676,21 @@ function App() {
       skipped: session.skipped + 1,
       streak: 0,
       questionStartedAt: now,
+      missed: session.missed.some(({ text }) => text === session.question.text)
+        ? session.missed
+        : [...session.missed, {
+          text: session.question.text,
+          answer: session.question.answer,
+          reason: 'skipped' as const,
+        }],
     }
     setSession(nextSession)
     triggerFx('skip')
     if (deadline <= now) finishGame(nextSession)
-  }, [session, finishGame, clearWrongClearTimeout, triggerFx])
+  }, [session, finishGame, clearWrongClearTimeout, triggerFx, quitConfirm])
 
   useEffect(() => {
-    if (screen !== 'game' || !session) return
+    if (screen !== 'game' || !session || quitConfirm || pausedAtRef.current !== null) return
     if (session.mode === 'Chrono libre') {
       if (session.deadline && clock >= session.deadline) finishGame(session)
       return
@@ -604,7 +700,7 @@ function App() {
       timedOutQuestionRef.current = session.questionNumber
       handleNiveauxMistake(true)
     }
-  }, [clock, screen, session, finishGame, handleNiveauxMistake])
+  }, [clock, screen, session, finishGame, handleNiveauxMistake, quitConfirm])
 
   useEffect(() => {
     if (screen !== 'results' || !result) return
@@ -617,10 +713,12 @@ function App() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        setQuitConfirm((current) => !current)
+        if (pausedAtRef.current === null) openQuitConfirm()
+        else closeQuitConfirm()
         return
       }
-      if (session?.mode === 'Chrono libre' && !quitConfirm && event.code === 'Space') {
+      if (session?.mode === 'Chrono libre' && event.code === 'Space') {
+        if (quitConfirm || pausedAtRef.current !== null) return
         event.preventDefault()
         if (!event.repeat) handleZenSkip()
         return
@@ -628,7 +726,7 @@ function App() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [screen, session, quitConfirm, handleZenSkip])
+  }, [screen, session, quitConfirm, handleZenSkip, openQuitConfirm, closeQuitConfirm])
 
   useEffect(() => {
     if (screen !== 'countdown') return
@@ -667,11 +765,16 @@ function App() {
   }, [screen, result, replayHotkeyReady, startLevels, startZen])
 
   function returnHome() {
+    pausedAtRef.current = null
+    setPausedAt(null)
+    clearLevelUpTimeout()
     setScreen('home')
     setSession(null)
     setAnswer('')
     setFeedback('')
+    setLevelUp(false)
     setQuitConfirm(false)
+    setCurrentDate(dateKey(new Date()))
     setStoredData(readGameData())
   }
 
@@ -760,8 +863,8 @@ function App() {
           onClear={() => onClear(true)}
           onQuit={returnHome}
           onSkip={handleZenSkip}
-          onRequestQuit={() => setQuitConfirm(true)}
-          onContinue={() => setQuitConfirm(false)}
+          onRequestQuit={openQuitConfirm}
+          onContinue={closeQuitConfirm}
         />
       )}
       {screen === 'game' && session && session.mode !== 'Chrono libre' && (
@@ -779,8 +882,8 @@ function App() {
           onBackspace={() => onBackspace()}
           onClear={() => onClear()}
           onQuit={returnHome}
-          onRequestQuit={() => setQuitConfirm(true)}
-          onContinue={() => setQuitConfirm(false)}
+          onRequestQuit={openQuitConfirm}
+          onContinue={closeQuitConfirm}
         />
       )}
       {screen === 'results' && result && (

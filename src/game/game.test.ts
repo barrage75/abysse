@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { ACHIEVEMENTS, evaluate, type AchievementStats } from './achievements'
 import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion } from './daily'
 import { LEVELS } from './levels'
-import { generateQuestion, configFromLevel } from './questions'
+import { generateQuestion, nextLevelQuestion, configFromLevel } from './questions'
+import { recordMissed, resolveSkipped } from './review'
 import { mulberry32, seedFromDate } from './rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './scoring'
 import {
@@ -79,6 +80,29 @@ describe('question generation', () => {
         expect(leftText % rightText).toBe(0)
         expect(leftText / rightText).toBe(question.answer)
       }
+    }
+  })
+
+  it.each(LEVELS)('never generates zero subtraction questions for level $id', (level) => {
+    const rng = mulberry32(level.id * 97)
+    const config: ReturnType<typeof configFromLevel> = {
+      ...configFromLevel(level),
+      operations: ['-'],
+    }
+    for (let index = 0; index < 2000; index += 1) {
+      expect(generateQuestion(rng, config).answer).not.toBe(0)
+    }
+  })
+
+  it('avoids recently used questions in levels mode', () => {
+    const rng = mulberry32(8675309)
+    const config = configFromLevel(LEVELS[0])
+    let recent: string[] = []
+
+    for (let index = 0; index < 500; index += 1) {
+      const next = nextLevelQuestion(rng, config, recent)
+      expect(recent).not.toContain(next.text)
+      recent = [...recent, next.text].slice(-5)
     }
   })
 })
@@ -218,6 +242,34 @@ describe('Chrono libre', () => {
   })
 })
 
+describe('review tracking', () => {
+  it('appends a missed question', () => {
+    const wrong = { text: '8 + 7', answer: 15, given: '14', reason: 'wrong' as const }
+    expect(recordMissed([], wrong)).toEqual([wrong])
+  })
+
+  it('replaces the existing entry for the same question', () => {
+    const first = { text: '8 + 7', answer: 15, given: '14', reason: 'wrong' as const }
+    const updated = { ...first, given: '13' }
+    expect(recordMissed([first], updated)).toEqual([updated])
+  })
+
+  it('does not duplicate an already-skipped question', () => {
+    const skipped = { text: '8 + 7', answer: 15, reason: 'skipped' as const }
+    expect(recordMissed([skipped], skipped)).toEqual([skipped])
+  })
+
+  it('removes a skipped question when it is later answered correctly', () => {
+    const skipped = { text: '8 + 7', answer: 15, reason: 'skipped' as const }
+    expect(resolveSkipped([skipped], skipped.text)).toEqual([])
+  })
+
+  it('keeps a wrong answer in review when it is later corrected', () => {
+    const wrong = { text: '8 + 7', answer: 15, given: '14', reason: 'wrong' as const }
+    expect(resolveSkipped([wrong], wrong.text)).toEqual([wrong])
+  })
+})
+
 describe('achievements', () => {
   const baseline: AchievementStats = {
     mode: 'Niveaux',
@@ -269,6 +321,73 @@ describe('achievements', () => {
 })
 
 describe('local storage', () => {
+  it('compares Levels records using adjusted scores', () => {
+    let value: string | null = null
+    const storage: StorageLike = {
+      getItem: () => value,
+      setItem: (_key, nextValue) => { value = nextValue },
+    }
+    const baseRecord = {
+      mode: 'Niveaux' as const,
+      date: '2025-05-08',
+      accuracy: 80,
+      averageResponseTime: 4,
+      bestStreak: 5,
+    }
+
+    saveGameRecord({ ...baseRecord, score: 100, adjustedScore: 300 }, storage)
+    const second = saveGameRecord({ ...baseRecord, score: 200, adjustedScore: 200 }, storage)
+
+    expect(second.isNewRecord).toBe(false)
+    expect(second.data.bestScores.Niveaux.score).toBe(300)
+  })
+
+  it('migrates legacy Levels best scores to the best adjusted history score', () => {
+    const legacyRecord = {
+      mode: 'Niveaux' as const,
+      score: 150,
+      adjustedScore: 450,
+      date: '2025-05-08',
+      accuracy: 80,
+      averageResponseTime: 4,
+      bestStreak: 5,
+    }
+    let value: string | null = JSON.stringify({
+      version: 1,
+      bestScores: { Niveaux: { score: 150, date: legacyRecord.date, accuracy: 80 } },
+      achievements: [],
+      dailyResults: [],
+      history: [legacyRecord],
+    })
+    const storage: StorageLike = {
+      getItem: () => value,
+      setItem: (_key, nextValue) => { value = nextValue },
+    }
+
+    const migrated = readGameData(storage)
+    expect(migrated.bestScores.Niveaux.score).toBe(450)
+    expect(migrated.levelsBestAdjusted).toBe(true)
+
+    const saved = saveGameRecord({ ...legacyRecord, score: 200, adjustedScore: 300 }, storage)
+    expect(saved.isNewRecord).toBe(false)
+    expect(saved.data.bestScores.Niveaux.score).toBe(450)
+  })
+
+  it('preserves a legacy Levels best score when its history is empty', () => {
+    const storage: StorageLike = {
+      getItem: () => JSON.stringify({
+        version: 1,
+        bestScores: { Niveaux: { score: 500, date: '2025-05-08', accuracy: 80 } },
+        history: [],
+      }),
+      setItem: () => undefined,
+    }
+
+    const migrated = readGameData(storage)
+    expect(migrated.bestScores.Niveaux.score).toBe(500)
+    expect(migrated.levelsBestAdjusted).toBe(true)
+  })
+
   it('returns empty data when saved JSON is corrupted', () => {
     const storage: StorageLike = {
       getItem: (key) => key === STORAGE_KEY ? '{ broken json' : null,

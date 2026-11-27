@@ -5,6 +5,9 @@ interface NumericKeypadProps {
   onDigit: (value: string) => void
   onBackspace: () => void
   onClear: () => void
+  onSubmit?: () => void
+  submitLabel?: string
+  disabled?: boolean
 }
 
 // oxlint-disable-next-line react/only-export-components
@@ -22,7 +25,14 @@ export function useIsTouch() {
   return isTouch
 }
 
-export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadProps) {
+export function NumericKeypad({
+  onDigit,
+  onBackspace,
+  onClear,
+  onSubmit,
+  submitLabel,
+  disabled = false,
+}: NumericKeypadProps) {
   const isTouch = useIsTouch()
   const { t } = useLang()
   if (!isTouch) return null
@@ -30,11 +40,21 @@ export function NumericKeypad({ onDigit, onBackspace, onClear }: NumericKeypadPr
   return (
     <div className="keypad" aria-label={t.game.keypad}>
       {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
-        <button key={digit} type="button" onClick={() => onDigit(digit)}>{digit}</button>
+        <button key={digit} type="button" disabled={disabled} onClick={() => onDigit(digit)}>{digit}</button>
       ))}
-      <button type="button" className="keypad-secondary" onClick={onClear}>{t.game.clear}</button>
-      <button type="button" onClick={() => onDigit('0')}>0</button>
-      <button type="button" className="keypad-secondary" onClick={onBackspace}>⌫</button>
+      <button type="button" className="keypad-secondary" disabled={disabled} onClick={onClear}>{t.game.clear}</button>
+      <button type="button" disabled={disabled} onClick={() => onDigit('0')}>0</button>
+      <button type="button" className="keypad-secondary" disabled={disabled} onClick={onBackspace}>⌫</button>
+      {onSubmit && (
+        <button
+          type="button"
+          className="button button-primary keypad-submit"
+          disabled={disabled}
+          onClick={onSubmit}
+        >
+          {submitLabel ?? t.game.submit}
+        </button>
+      )}
     </div>
   )
 }

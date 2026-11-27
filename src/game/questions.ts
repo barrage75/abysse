@@ -53,6 +53,9 @@ export function generateQuestion(rng: RandomSource, config: QuestionConfig): Que
   if (op === '-') {
     let left = integerInRange(rng, config.subtraction)
     let right = integerInRange(rng, config.subtraction)
+    while (!config.allowNegative && left === right) {
+      right = integerInRange(rng, config.subtraction)
+    }
     if (!config.allowNegative && left < right) [left, right] = [right, left]
     return { text: `${left} − ${right}`, answer: left - right, op }
   }
@@ -66,4 +69,16 @@ export function generateQuestion(rng: RandomSource, config: QuestionConfig): Que
   const divisor = integerInRange(rng, config.divisionDivisor)
   const quotient = integerInRange(rng, config.divisionQuotient)
   return { text: `${divisor * quotient} ÷ ${divisor}`, answer: quotient, op }
+}
+
+export function nextLevelQuestion(
+  rng: RandomSource,
+  config: QuestionConfig,
+  recent: string[],
+): Question {
+  let candidate = generateQuestion(rng, config)
+  for (let attempt = 1; attempt < 20 && recent.includes(candidate.text); attempt += 1) {
+    candidate = generateQuestion(rng, config)
+  }
+  return candidate
 }
