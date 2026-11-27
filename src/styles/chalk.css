@@ -105,6 +105,17 @@
   background: rgba(0, 0, 0, 0.28);
 }
 .question-timer div { background: linear-gradient(90deg, #4fd12a, var(--potion) 60%, #d8ff8a); box-shadow: 0 0 12px rgba(157, 255, 58, 0.7); }
+.question-timer.is-low div {
+  background: linear-gradient(90deg, #ff5f6d, #ffb35f);
+  box-shadow: 0 0 12px rgba(255, 95, 109, 0.65);
+  animation: timer-pulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes timer-pulse {
+  to { opacity: 0.7; box-shadow: 0 0 18px rgba(255, 179, 95, 0.8); }
+}
+html[data-motion='off'] .question-timer.is-low div { animation: none; }
+
+.question-area.is-paused { filter: blur(10px); opacity: 0.5; }
 
 /* La question écrite à la craie */
 .question-text {
@@ -133,6 +144,16 @@
   color: var(--chalk);
 }
 .keypad button:active { background: rgba(157, 255, 58, 0.25); }
+.keypad .keypad-submit {
+  grid-column: 1 / -1;
+  height: 56px;
+  border: 3px solid #e8ffb8;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #c3ff6b, #6fd81c);
+  color: #0b2a12;
+  box-shadow: 0 0 22px rgba(157, 255, 58, 0.45), inset 0 -4px 0 rgba(0, 60, 0, 0.25);
+  font-size: 20px;
+}
 
 /* La pieuvre au tableau */
 .game-page { overflow: visible; }

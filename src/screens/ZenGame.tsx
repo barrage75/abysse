@@ -41,6 +41,7 @@ export function ZenGame({
   const inputRef = useRef<HTMLInputElement>(null)
   const isTouch = useIsTouch()
   const progress = Math.max(0, Math.min(100, (remainingSeconds / (session.duration ?? 60)) * 100))
+  const isLow = remainingSeconds <= 10
   const mood = fx?.kind === 'wrong' || fx?.kind === 'timeout'
     ? 'sad'
     : fx?.kind === 'correct' || fx?.kind === 'levelup'
@@ -59,15 +60,15 @@ export function ZenGame({
         <span className="game-mode-label">{modeLabel(session.mode, t)}</span>
         <strong className="global-timer">{t.records.duration(Math.ceil(remainingSeconds))}</strong>
       </header>
-      <div className="question-timer"><div style={{ width: `${progress}%` }} /></div>
+      <div className={`question-timer${isLow ? ' is-low' : ''}`}><div style={{ width: `${progress}%` }} /></div>
       <section className="zen-score-line">
         <span>{t.game.score} <strong>{session.score.toLocaleString(localeFor(lang))}</strong></span>
         <span>{t.game.personalBest(bestScore.toLocaleString(localeFor(lang)))}</span>
         <span>{session.operations?.join('  ')}</span>
-        <button className="button button-secondary skip-button" onClick={onSkip}>{t.game.skip}</button>
+        <button className="button button-secondary skip-button" disabled={quitConfirm} onClick={onSkip}>{t.game.skip}</button>
       </section>
       <img className="game-octo" data-mood={mood} src={mood === 'sad' ? octoSad : octo} alt="" />
-      <section className="question-area zen-question-area" data-fx={fx?.kind}>
+      <section className={`question-area zen-question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
         <p className="question-count">{t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
           <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
@@ -85,13 +86,16 @@ export function ZenGame({
           inputMode={isTouch ? 'none' : 'numeric'}
           autoComplete="off"
           placeholder="?"
+          disabled={quitConfirm}
         />
         <p className="answer-feedback">{t.game.answerHint}</p>
         <NumericKeypad
           onDigit={(digit) => onAnswerChange(`${answer}${digit}`)}
           onBackspace={onBackspace}
           onClear={onClear}
+          disabled={quitConfirm}
         />
+        {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span> : null}
       </section>
       {quitConfirm && (
         <div className="quit-confirm" role="alertdialog" aria-modal="true">

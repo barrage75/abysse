@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ACHIEVEMENTS, evaluate, type AchievementStats } from './achievements'
 import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion } from './daily'
 import { LEVELS } from './levels'
-import { generateQuestion, configFromLevel } from './questions'
+import { generateQuestion, nextLevelQuestion, configFromLevel } from './questions'
 import { mulberry32, seedFromDate } from './rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './scoring'
 import {
@@ -79,6 +79,29 @@ describe('question generation', () => {
         expect(leftText % rightText).toBe(0)
         expect(leftText / rightText).toBe(question.answer)
       }
+    }
+  })
+
+  it.each(LEVELS)('never generates zero subtraction questions for level $id', (level) => {
+    const rng = mulberry32(level.id * 97)
+    const config: ReturnType<typeof configFromLevel> = {
+      ...configFromLevel(level),
+      operations: ['-'],
+    }
+    for (let index = 0; index < 2000; index += 1) {
+      expect(generateQuestion(rng, config).answer).not.toBe(0)
+    }
+  })
+
+  it('avoids recently used questions in levels mode', () => {
+    const rng = mulberry32(8675309)
+    const config = configFromLevel(LEVELS[0])
+    let recent: string[] = []
+
+    for (let index = 0; index < 500; index += 1) {
+      const next = nextLevelQuestion(rng, config, recent)
+      expect(recent).not.toContain(next.text)
+      recent = [...recent, next.text].slice(-5)
     }
   })
 })
@@ -269,6 +292,27 @@ describe('achievements', () => {
 })
 
 describe('local storage', () => {
+  it('compares Levels records using adjusted scores', () => {
+    let value: string | null = null
+    const storage: StorageLike = {
+      getItem: () => value,
+      setItem: (_key, nextValue) => { value = nextValue },
+    }
+    const baseRecord = {
+      mode: 'Niveaux' as const,
+      date: '2025-05-08',
+      accuracy: 80,
+      averageResponseTime: 4,
+      bestStreak: 5,
+    }
+
+    saveGameRecord({ ...baseRecord, score: 100, adjustedScore: 300 }, storage)
+    const second = saveGameRecord({ ...baseRecord, score: 200, adjustedScore: 200 }, storage)
+
+    expect(second.isNewRecord).toBe(false)
+    expect(second.data.bestScores.Niveaux.score).toBe(300)
+  })
+
   it('returns empty data when saved JSON is corrupted', () => {
     const storage: StorageLike = {
       getItem: (key) => key === STORAGE_KEY ? '{ broken json' : null,

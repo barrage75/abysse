@@ -46,6 +46,7 @@ export function NiveauxGame({
   const isTouch = useIsTouch()
   const progress = Math.max(0, Math.min(100, (remainingSeconds / session.timeLimitSeconds) * 100))
   const isDaily = session.mode === 'Défi Quotidien'
+  const isLow = remainingSeconds <= session.timeLimitSeconds * 0.3
   const mood = fx?.kind === 'wrong' || fx?.kind === 'timeout'
     ? 'sad'
     : fx?.kind === 'correct' || fx?.kind === 'levelup'
@@ -78,12 +79,12 @@ export function NiveauxGame({
         </div>
         <div><span>{t.game.streak}</span><strong>{session.streak}</strong></div>
       </section>
-      <div className="question-timer" aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}>
+      <div className={`question-timer${isLow ? ' is-low' : ''}`} aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}>
         <div style={{ width: `${progress}%` }} />
       </div>
 
       <img className="game-octo" data-mood={mood} src={mood === 'sad' ? octoSad : octo} alt="" />
-      <section className="question-area" data-fx={fx?.kind}>
+      <section className={`question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
         <p className="question-count">{isDaily
           ? t.game.dailyQuestion(session.questionNumber, 20)
           : t.game.question(session.questionNumber)}</p>
@@ -110,15 +111,20 @@ export function NiveauxGame({
             autoComplete="off"
             aria-describedby="answer-feedback"
             placeholder="?"
+            disabled={quitConfirm}
           />
-          <button className="button button-primary" type="submit">{t.game.submit}</button>
+          <button className="button button-primary" type="submit" disabled={quitConfirm}>{t.game.submit}</button>
         </form>
         <p id="answer-feedback" className="answer-feedback" aria-live="polite">{feedback || t.game.enterHint}</p>
         <NumericKeypad
           onDigit={(digit) => onAnswerChange(`${answer}${digit}`)}
           onBackspace={onBackspace}
           onClear={onClear}
+          onSubmit={onSubmit}
+          submitLabel={t.game.submit}
+          disabled={quitConfirm}
         />
+        {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span> : null}
       </section>
       {!isDaily && <p className="game-hint">{t.game.pointsSpeed}</p>}
       {quitConfirm && (

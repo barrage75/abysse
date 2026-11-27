@@ -99,11 +99,14 @@ export function saveGameRecord(
   const data = readGameData(storage)
   const key = bestScoreKey(record)
   const previous = data.bestScores[key]
-  const isNewRecord = !previous || record.score > previous.score
+  const bestScore = record.mode === 'Niveaux'
+    ? record.adjustedScore ?? record.score
+    : record.score
+  const isNewRecord = !previous || bestScore > previous.score
 
   data.history = [record, ...data.history].slice(0, 50)
   if (isNewRecord) {
-    data.bestScores[key] = { score: record.score, date: record.date, accuracy: record.accuracy }
+    data.bestScores[key] = { score: bestScore, date: record.date, accuracy: record.accuracy }
   }
   if (record.mode === 'Défi Quotidien') {
     const existingDaily = data.dailyResults.find((item) => item.date === record.date)
