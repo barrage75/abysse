@@ -3,7 +3,7 @@ import { ACHIEVEMENTS, evaluate, type AchievementStats } from './achievements'
 import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion } from './daily'
 import { LEVELS } from './levels'
 import { generateQuestion, nextLevelQuestion, configFromLevel } from './questions'
-import { recordMissed } from './review'
+import { recordMissed, resolveSkipped } from './review'
 import { mulberry32, seedFromDate } from './rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './scoring'
 import {
@@ -257,6 +257,16 @@ describe('review tracking', () => {
   it('does not duplicate an already-skipped question', () => {
     const skipped = { text: '8 + 7', answer: 15, reason: 'skipped' as const }
     expect(recordMissed([skipped], skipped)).toEqual([skipped])
+  })
+
+  it('removes a skipped question when it is later answered correctly', () => {
+    const skipped = { text: '8 + 7', answer: 15, reason: 'skipped' as const }
+    expect(resolveSkipped([skipped], skipped.text)).toEqual([])
+  })
+
+  it('keeps a wrong answer in review when it is later corrected', () => {
+    const wrong = { text: '8 + 7', answer: 15, given: '14', reason: 'wrong' as const }
+    expect(resolveSkipped([wrong], wrong.text)).toEqual([wrong])
   })
 })
 

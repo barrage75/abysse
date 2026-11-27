@@ -7,7 +7,7 @@ import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
 import { getLevel } from './game/levels'
 import { configFromLevel, nextLevelQuestion } from './game/questions'
-import { recordMissed } from './game/review'
+import { recordMissed, resolveSkipped } from './game/review'
 import { dateKey, mulberry32, type RandomSource } from './game/rng'
 import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from './game/scoring'
 import { readMotionEnabled, setMotionEnabled } from './game/motion'
@@ -608,7 +608,7 @@ function App() {
         questionNumber: next.questionNumber,
         zenRecent: next.recent,
         zenRequeue: next.requeue,
-        missed: session.missed.filter(({ text }) => text !== session.question.text),
+        missed: resolveSkipped(session.missed, session.question.text),
         score: session.score + 1,
         correct: session.correct + 1,
         streak: session.streak + 1,
