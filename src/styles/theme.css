@@ -532,6 +532,7 @@ html[data-theme='soleil'] .question-timer:not(.is-low) div { background: var(--g
 .keypad .keypad-submit { grid-column: 1 / -1; background: var(--g); color: var(--ink); }
 .points-pop { position: absolute; z-index: 3; top: -11px; right: -8px; padding: 0 10px 2px; transform: rotate(6deg); border: 3px solid var(--ink); border-radius: 12px; background: var(--g); box-shadow: 0 3px 0 var(--ink); color: var(--ink); font-size: 24px; font-weight: 800; line-height: 1.2; pointer-events: none; }
 .game-hint, .keyboard-hint, .daily-note { margin: 8px 0; color: var(--on-bg); font-size: 13px; font-weight: 700; text-align: center; }
+.result-page .keyboard-hint, .result-page .daily-note { color: var(--mut); }
 
 .zen-page .game-header { grid-template-columns: 1fr auto 1fr; }
 .zen-score-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 6px 12px; margin: 9px 0; color: var(--on-bg); font-size: 14px; font-weight: 700; }
