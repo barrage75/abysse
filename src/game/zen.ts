@@ -40,6 +40,14 @@ export function validateZenConfig(config: ZenConfig): ZenErrors {
   return errors
 }
 
+export type ZenAttemptStatus = 'correct' | 'wrong' | 'pending'
+
+export function zenAttemptStatus(value: string, answer: number): ZenAttemptStatus {
+  if (value === '') return 'pending'
+  if (Number(value) === answer) return 'correct'
+  return value.length >= String(answer).length ? 'wrong' : 'pending'
+}
+
 function generateZenCandidate(rng: RandomSource, selected: Operation): Question {
   if (selected === '-') {
     const first = Math.floor(rng() * 99) + 2

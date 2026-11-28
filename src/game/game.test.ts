@@ -20,6 +20,7 @@ import {
   generateZenQuestion,
   nextZenQuestion,
   validateZenConfig,
+  zenAttemptStatus,
   ZEN_SKIP_PENALTY_MS,
   type ZenConfig,
   type ZenQuestionAdvance,
@@ -157,6 +158,15 @@ describe('Chrono libre', () => {
     expect(validateZenConfig({ ...baseConfig, operations: [] }).operations).toBeDefined()
     expect(validateZenConfig(baseConfig)).toEqual({})
     expect(validateZenConfig({ ...baseConfig, duration: 45 as ZenConfig['duration'] }).duration).toBeDefined()
+  })
+
+  it('classifies pending, correct, and wrong attempts by answer length', () => {
+    expect(zenAttemptStatus('', 3)).toBe('pending')
+    expect(zenAttemptStatus('2', 22)).toBe('pending')
+    expect(zenAttemptStatus('99', 22)).toBe('wrong')
+    expect(zenAttemptStatus('9999', 3)).toBe('wrong')
+    expect(zenAttemptStatus('3', 3)).toBe('correct')
+    expect(zenAttemptStatus('03', 3)).toBe('correct')
   })
 
   it('uses time attack operand ranges and exact inverse division', () => {

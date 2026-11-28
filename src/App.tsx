@@ -27,6 +27,7 @@ import {
   nextZenQuestion,
   validateZenConfig,
   zenComboKey,
+  zenAttemptStatus,
   type ZenConfig,
 } from './game/zen'
 import { useLang } from './i18n/useLang'
@@ -627,9 +628,9 @@ function App() {
     if (quitConfirm || pausedAtRef.current !== null) return
     setAnswer(value)
     if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
-    const answerLength = String(session.question.answer).length
-    if (!value) wrongCurrentRef.current = ''
-    if (Number(value) === session.question.answer && value !== '') {
+    const status = zenAttemptStatus(value, session.question.answer)
+    if (status === 'pending') wrongCurrentRef.current = ''
+    if (status === 'correct') {
       clearWrongClearTimeout()
       const now = Date.now()
       const elapsed = Math.max(0, now - session.questionStartedAt)
@@ -666,8 +667,7 @@ function App() {
       wrongCurrentRef.current = ''
       return
     }
-    if (value.length < answerLength) wrongCurrentRef.current = ''
-    if (value.length === answerLength && value !== String(session.question.answer)) {
+    if (status === 'wrong') {
       const attempt = `${session.questionNumber}:${value}`
       if (wrongCurrentRef.current !== attempt) {
         wrongCurrentRef.current = attempt
