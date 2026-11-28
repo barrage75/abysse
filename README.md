@@ -1,10 +1,12 @@
 # ABYSSE — Arcade Pop
 
 <p align="center">
-  <img src="docs/media/abysse.gif" alt="Démo ABYSSE : échauffement, partie en mode Niveaux et détail de la partie" width="420">
+  <img src="docs/media/abysse.gif" alt="Démo ABYSSE : accueil sonar, partie en mode Niveaux et détail de la partie" width="420">
 </p>
 
 Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en anglais. Choisissez parmi six thèmes de couleur ; vos parties, records et préférences restent dans votre navigateur.
+
+Jouer en ligne : <https://abysse-one.vercel.app>
 
 ## Aperçu
 
@@ -22,7 +24,7 @@ Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en an
 
 <table>
   <tr>
-    <td align="center"><strong>Accueil et thèmes</strong><br><img src="docs/media/home.webp" alt="Accueil avec calcul d’échauffement et changement de thème" width="420"></td>
+    <td align="center"><strong>Accueil et thèmes</strong><br><img src="docs/media/home.webp" alt="Accueil sonar et changement de thème" width="420"></td>
     <td align="center"><strong>Défi du jour</strong><br><img src="docs/media/daily.webp" alt="Partie mobile du défi du jour et historique" width="420"></td>
   </tr>
 </table>
