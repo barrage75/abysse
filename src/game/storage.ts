@@ -1,5 +1,6 @@
 import type { ZenConfig } from './zen'
 import { zenComboKey } from './zen'
+import { MAX_LOG_ENTRIES, type QuestionLogEntry } from './log'
 
 export const STORAGE_KEY = 'jeu-calcul:v1'
 
@@ -16,6 +17,7 @@ export interface GameRecord {
   operations?: string[]
   adjustedScore?: number
   startingLevel?: number
+  log?: QuestionLogEntry[]
 }
 
 export interface BestScore {
@@ -56,10 +58,97 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function isDateKey(value: unknown): value is string {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
+  const date = new Date(`${value}T00:00:00.000Z`)
+  return !Number.isNaN(date.valueOf()) && date.toISOString().slice(0, 10) === value
+}
+
+function isGameMode(value: unknown): value is GameMode {
+  return value === 'Niveaux' || value === 'Chrono libre' || value === 'Défi Quotidien'
+}
+
+function isBestScore(value: unknown): value is BestScore {
+  return isRecord(value)
+    && isFiniteNumber(value.score) && value.score >= 0
+    && isDateKey(value.date)
+    && isFiniteNumber(value.accuracy) && value.accuracy >= 0 && value.accuracy <= 100
+}
+
+function isGameRecord(value: unknown): value is GameRecord {
+  if (!isRecord(value)
+    || !isGameMode(value.mode)
+    || !isFiniteNumber(value.score) || value.score < 0
+    || !isDateKey(value.date)
+    || !isFiniteNumber(value.accuracy) || value.accuracy < 0 || value.accuracy > 100
+    || !isFiniteNumber(value.averageResponseTime) || value.averageResponseTime < 0
+    || !isFiniteNumber(value.bestStreak) || value.bestStreak < 0) return false
+  if (value.duration !== undefined && (!isFiniteNumber(value.duration) || value.duration <= 0)) return false
+  if (value.adjustedScore !== undefined && (!isFiniteNumber(value.adjustedScore) || value.adjustedScore < 0)) return false
+  if (value.startingLevel !== undefined && (!isFiniteNumber(value.startingLevel) || value.startingLevel < 1)) return false
+  return value.operations === undefined
+    || (Array.isArray(value.operations)
+      && value.operations.length > 0
+      && value.operations.every((operation) => operation === '+' || operation === '-' || operation === '×' || operation === '÷'))
+}
+
+function isUnlockedAchievement(value: unknown): value is UnlockedAchievement {
+  return isRecord(value) && typeof value.id === 'string' && isDateKey(value.date)
+}
+
+function isDailyResult(value: unknown): value is DailyResult {
+  return isRecord(value)
+    && isDateKey(value.date)
+    && (value.score === undefined || (isFiniteNumber(value.score) && value.score >= 0))
+}
+
+function isQuestionLogEntry(value: unknown): value is QuestionLogEntry {
+  return isRecord(value)
+    && typeof value.text === 'string'
+    && value.text.length > 0
+    && isFiniteNumber(value.answer)
+    && (value.result === 'correct' || value.result === 'wrong' || value.result === 'timeout' || value.result === 'skipped')
+    && (value.given === undefined || typeof value.given === 'string')
+    && (value.seconds === undefined || (isFiniteNumber(value.seconds) && value.seconds >= 0))
+    && (value.attempts === undefined || (isFiniteNumber(value.attempts) && Number.isInteger(value.attempts) && value.attempts >= 0))
+    && (value.n === undefined || (isFiniteNumber(value.n) && Number.isInteger(value.n) && value.n > 0))
+}
+
+function normalizeGameRecord(record: GameRecord): GameRecord {
+  const { log, ...withoutLog } = record
+  if (!Array.isArray(log)) return withoutLog
+  return { ...withoutLog, log: log.filter(isQuestionLogEntry).slice(-MAX_LOG_ENTRIES) }
+}
+
+function retainRecentLogs(history: GameRecord[]): GameRecord[] {
+  return history.map((record, index) => {
+    if (index < 20 || record.log === undefined) return record
+    const { log: _log, ...withoutLog } = record
+    return withoutLog
+  })
+}
+
 function normalizeGameData(value: unknown): StoredGameData {
   if (!isRecord(value) || value.version !== 1) return emptyGameData()
-  const bestScores = isRecord(value.bestScores) ? value.bestScores as Record<string, BestScore> : {}
-  const history = Array.isArray(value.history) ? value.history.slice(0, 50) as GameRecord[] : []
+  const bestScores: Record<string, BestScore> = {}
+  if (isRecord(value.bestScores)) {
+    for (const [key, score] of Object.entries(value.bestScores)) {
+      if (isBestScore(score)) bestScores[key] = score
+    }
+  }
+  const history = Array.isArray(value.history)
+    ? retainRecentLogs(value.history.filter(isGameRecord).slice(0, 50).map(normalizeGameRecord))
+    : []
+  const achievements = Array.isArray(value.achievements)
+    ? value.achievements.filter(isUnlockedAchievement)
+    : []
+  const dailyResults = Array.isArray(value.dailyResults)
+    ? value.dailyResults.filter(isDailyResult)
+    : []
 
   if (value.levelsBestAdjusted !== true) {
     const previous = bestScores.Niveaux
@@ -81,8 +170,8 @@ function normalizeGameData(value: unknown): StoredGameData {
   return {
     version: 1,
     bestScores,
-    achievements: Array.isArray(value.achievements) ? value.achievements as UnlockedAchievement[] : [],
-    dailyResults: Array.isArray(value.dailyResults) ? value.dailyResults as DailyResult[] : [],
+    achievements,
+    dailyResults,
     history,
     levelsBestAdjusted: true,
   }
@@ -96,6 +185,14 @@ export function readGameData(storage?: StorageLike): StoredGameData {
   } catch {
     return emptyGameData()
   }
+}
+
+export function bestNiveauxScore(data: StoredGameData): number {
+  return data.history.reduce((best, record) => (
+    record.mode === 'Niveaux'
+      ? Math.max(best, record.adjustedScore ?? record.score)
+      : best
+  ), data.bestScores.Niveaux?.score ?? 0)
 }
 
 export function writeGameData(data: StoredGameData, storage?: StorageLike): void {
@@ -126,7 +223,9 @@ export function saveGameRecord(
     : record.score
   const isNewRecord = !previous || bestScore > previous.score
 
-  data.history = [record, ...data.history].slice(0, 50)
+  data.history = retainRecentLogs(
+    [record, ...data.history].slice(0, 50).map(normalizeGameRecord),
+  )
   if (isNewRecord) {
     data.bestScores[key] = { score: bestScore, date: record.date, accuracy: record.accuracy }
   }

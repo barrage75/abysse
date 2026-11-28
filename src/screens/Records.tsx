@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from 'react'
+import { GameLog } from '../components/GameLog'
 import type { StoredGameData } from '../game/storage'
 import { useLang } from '../i18n/useLang'
 import { formatDateKey, localeFor, modeLabel } from '../i18n/helpers'
@@ -20,7 +22,40 @@ function formatZenBest(key: string, t: ReturnType<typeof useLang>['t']): string 
 
 export function Records({ data, onBack }: RecordsProps) {
   const { lang, t } = useLang()
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
+  const rowButtonRefs = useRef(new Map<number, HTMLButtonElement>())
+  const returnFocusIndexRef = useRef<number | null>(null)
+  const detailBackRef = useRef<HTMLButtonElement | null>(null)
   const bests = Object.entries(data.bestScores)
+  const selectedRecord = selectedIndex === null ? undefined : data.history[selectedIndex]
+
+  useEffect(() => {
+    if (selectedIndex !== null) {
+      detailBackRef.current?.focus()
+      return
+    }
+    const index = returnFocusIndexRef.current
+    if (index !== null) {
+      rowButtonRefs.current.get(index)?.focus()
+      returnFocusIndexRef.current = null
+    }
+  }, [selectedIndex])
+
+  if (selectedRecord) {
+    return (
+      <main className="page-shell list-page record-detail-page">
+        <button ref={detailBackRef} className="back-button" onClick={() => setSelectedIndex(null)}>{t.records.backToList}</button>
+        <p className="eyebrow">{formatDateKey(selectedRecord.date, lang)}</p>
+        <h1>{modeLabel(selectedRecord.mode, t)}</h1>
+        <section className="record-detail-summary" aria-label={t.records.detailSummary}>
+          <div><span>{t.records.score}</span><strong>{selectedRecord.score.toLocaleString(localeFor(lang))}</strong></div>
+          <div><span>{t.results.accuracy}</span><strong>{selectedRecord.accuracy}%</strong></div>
+        </section>
+        <GameLog entries={selectedRecord.log ?? []} />
+      </main>
+    )
+  }
+
   return (
     <main className="page-shell list-page">
       <button className="back-button" onClick={onBack}>{t.setup.backHome}</button>
@@ -49,21 +84,44 @@ export function Records({ data, onBack }: RecordsProps) {
         <h2>{t.records.history}</h2>
         {data.history.length === 0 ? <p className="empty-copy">{t.records.emptyHistory}</p> : (
           <div className="history-list">
-            {data.history.map((record, index) => (
-              <article className="history-row" key={`${record.date}-${record.mode}-${index}`}>
-                <div>
-                  <strong>{modeLabel(record.mode, t)}</strong>
-                  <span>{formatDateKey(record.date, lang)}{record.duration ? ` · ${t.records.duration(record.duration)}` : ''}</span>
-                </div>
-                <div className="history-score">
-                  <strong>{record.score.toLocaleString(localeFor(lang))}</strong>
-                  <span>{record.accuracy}% · {t.records.average(new Intl.NumberFormat(localeFor(lang), {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1,
-                  }).format(record.averageResponseTime))}</span>
-                </div>
-              </article>
-            ))}
+            {data.history.map((record, index) => {
+              const rowKey = `${record.date}-${record.mode}-${index}`
+              const rowDetails = (
+                <>
+                  <div>
+                    <strong>{modeLabel(record.mode, t)}</strong>
+                    <span>{formatDateKey(record.date, lang)}{record.duration ? ` · ${t.records.duration(record.duration)}` : ''}</span>
+                  </div>
+                  <div className="history-score">
+                    <strong>{record.score.toLocaleString(localeFor(lang))}</strong>
+                    <span>{record.accuracy}% · {t.records.average(new Intl.NumberFormat(localeFor(lang), {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    }).format(record.averageResponseTime))}</span>
+                    {!record.log && <small className="history-details-unavailable">{t.records.detailsUnavailable}</small>}
+                  </div>
+                </>
+              )
+              return record.log
+                ? (
+                  <button
+                    className="history-row history-row-button"
+                    type="button"
+                    key={rowKey}
+                    ref={(node) => {
+                      if (node) rowButtonRefs.current.set(index, node)
+                      else rowButtonRefs.current.delete(index)
+                    }}
+                    onClick={() => {
+                      returnFocusIndexRef.current = index
+                      setSelectedIndex(index)
+                    }}
+                  >
+                    {rowDetails}
+                  </button>
+                )
+                : <article className="history-row" key={rowKey}>{rowDetails}</article>
+            })}
           </div>
         )}
       </section>

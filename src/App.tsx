@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AchievementToast } from './components/AchievementToast'
-import { AmbientBubbles } from './components/AmbientBubbles'
 import { TopControls } from './components/TopControls'
-import { Decor } from './components/Decor'
 import { evaluate } from './game/achievements'
-import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
+import { DAILY_QUESTION_COUNT, dailyQuestion, refreshDateKey } from './game/daily'
+import { isInteractiveTarget } from './game/keyboard'
+import { appendLog, roundLogSeconds, timeAttackCorrectEntry, timeAttackExpiryEntry, timeAttackSkipEntry } from './game/log'
 import { getLevel } from './game/levels'
 import { configFromLevel, nextLevelQuestion } from './game/questions'
 import { recordMissed, resolveSkipped } from './game/review'
@@ -14,6 +14,7 @@ import { readMotionEnabled, setMotionEnabled } from './game/motion'
 import { playSound, primeSound, readSoundEnabled, setSoundEnabled } from './game/sound'
 import {
   isDailyPlayed,
+  bestNiveauxScore,
   readGameData,
   saveGameRecord,
   unlockAchievements,
@@ -24,8 +25,10 @@ import {
 import {
   applyZenSkip,
   nextZenQuestion,
+  updateZenWrongAttemptCycle,
   validateZenConfig,
   zenComboKey,
+  zenAttemptStatus,
   type ZenConfig,
 } from './game/zen'
 import { useLang } from './i18n/useLang'
@@ -39,8 +42,6 @@ import { DailySetup, NiveauxSetup, ZenSetup } from './screens/Setup'
 import { Countdown } from './screens/Countdown'
 import type { Fx, FxKind, GameResult, GameSession } from './screens/types'
 import './styles/theme.css'
-import './styles/chalk.css'
-import './styles/home.css'
 
 type Screen = 'home' | 'levels-setup' | 'daily-setup' | 'zen-setup' | 'countdown' | 'game' | 'results' | 'records' | 'achievements'
 type LastSetup =
@@ -72,7 +73,6 @@ function App() {
   const [clock, setClock] = useState(() => Date.now())
   const [currentDate, setCurrentDate] = useState(() => dateKey(new Date()))
   const [pausedAt, setPausedAt] = useState<number | null>(null)
-  const [dailySetupDate, setDailySetupDate] = useState<Date | null>(null)
   const [countdownReturnScreen, setCountdownReturnScreen] = useState<Screen>('home')
   const dismissToast = useCallback(() => setToast([]), [])
   const rngRef = useRef<RandomSource>(Math.random)
@@ -89,12 +89,7 @@ function App() {
 
   const dailyPlayed = isDailyPlayed(currentDate)
   const todayDailyScore = storedData.dailyResults.find((daily) => daily.date === currentDate)?.score
-  const bestAdjustedNiveauxScore = storedData.history.reduce(
-    (best, record) => record.mode === 'Niveaux'
-      ? Math.max(best, record.adjustedScore ?? 0)
-      : best,
-    0,
-  )
+  const bestAdjustedNiveauxScore = bestNiveauxScore(storedData)
   const bestZenScore = session?.mode === 'Chrono libre' && session.duration
     ? storedData.bestScores[`Chrono libre:${zenComboKey({
       duration: session.duration,
@@ -145,6 +140,27 @@ function App() {
   }, [])
 
   useEffect(() => () => clearLevelUpTimeout(), [clearLevelUpTimeout])
+
+  useEffect(() => {
+    let timeout: number | undefined
+    const refreshDate = () => {
+      const now = new Date()
+      setCurrentDate((current) => refreshDateKey(current, now))
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime()
+      timeout = window.setTimeout(refreshDate, Math.max(1, nextMidnight - now.getTime() + 50))
+    }
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        setCurrentDate((current) => refreshDateKey(current, new Date()))
+      }
+    }
+    refreshDate()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     if (screen !== 'game') return
@@ -203,9 +219,12 @@ function App() {
     }
   }, [])
 
-  const finishGame = useCallback((current: GameSession) => {
+  const finishGame = useCallback((game: GameSession, logCurrentQuestion = true) => {
     if (finalizedRef.current) return
     finalizedRef.current = true
+    const current = game.mode === 'Chrono libre' && logCurrentQuestion
+      ? { ...game, log: appendLog(game.log, timeAttackExpiryEntry(game.question, game.zenLastWrongAttempt)) }
+      : game
     playSound('end')
     const date = current.dailyDate ?? dateKey(new Date())
     const adjusted = current.mode === 'Niveaux'
@@ -232,6 +251,7 @@ function App() {
       startingLevel: current.startingLevel,
       duration: current.duration,
       operations: current.operations,
+      log: current.log,
     }
 
     const existing = readGameData()
@@ -284,6 +304,7 @@ function App() {
       duration: current.duration,
       isNewRecord: saved.isNewRecord,
       skipped: current.skipped,
+      log: current.log,
       missed: current.missed,
     })
     setScreen('results')
@@ -320,9 +341,11 @@ function App() {
       totalResponseMs: 0,
       responseCount: 0,
       zenWrongAttempts: 0,
+      zenWrongAttemptsOnQuestion: 0,
       zenRecent: [],
       zenRequeue: [],
       recentQuestions: mode === 'Niveaux' ? [firstQuestion.text] : [],
+      log: [],
       missed: [],
       dailyDate,
       skipped: 0,
@@ -380,9 +403,11 @@ function App() {
       duration: config.duration,
       operations: config.operations,
       zenWrongAttempts: 0,
+      zenWrongAttemptsOnQuestion: 0,
       zenRecent: firstQuestion.recent,
       zenRequeue: firstQuestion.requeue,
       recentQuestions: [],
+      log: [],
       missed: [],
       skipped: 0,
     }
@@ -477,6 +502,12 @@ function App() {
       questionStartedAt: now,
       totalResponseMs: session.totalResponseMs + elapsed,
       responseCount: session.responseCount + 1,
+      log: appendLog(session.log, {
+        text: question.text,
+        answer: question.answer,
+        result: timedOut ? 'timeout' : 'wrong',
+        ...(!timedOut ? { given: answer } : {}),
+      }),
       missed: [...session.missed, {
         text: question.text,
         answer: question.answer,
@@ -559,6 +590,13 @@ function App() {
       timeLimitSeconds: getLevel(nextLevel).secondsPerQuestion,
       totalResponseMs: session.totalResponseMs + elapsed * 1000,
       responseCount: session.responseCount + 1,
+      log: appendLog(session.log, {
+        text: session.question.text,
+        answer: session.question.answer,
+        result: 'correct',
+        given: answer,
+        seconds: roundLogSeconds(elapsed),
+      }),
       recentQuestions: !isDaily && !dailyFinished
         ? [...session.recentQuestions, nextQuestion.text].slice(-5)
         : session.recentQuestions,
@@ -591,9 +629,14 @@ function App() {
     if (quitConfirm || pausedAtRef.current !== null) return
     setAnswer(value)
     if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
-    const answerLength = String(session.question.answer).length
-    if (!value) wrongCurrentRef.current = ''
-    if (Number(value) === session.question.answer && value !== '') {
+    const status = zenAttemptStatus(value, session.question.answer)
+    const wrongAttemptCycle = updateZenWrongAttemptCycle(
+      wrongCurrentRef.current,
+      status,
+      session.questionNumber,
+    )
+    wrongCurrentRef.current = wrongAttemptCycle.key
+    if (status === 'correct') {
       clearWrongClearTimeout()
       const now = Date.now()
       const elapsed = Math.max(0, now - session.questionStartedAt)
@@ -609,6 +652,14 @@ function App() {
         zenRecent: next.recent,
         zenRequeue: next.requeue,
         missed: resolveSkipped(session.missed, session.question.text),
+        log: appendLog(session.log, timeAttackCorrectEntry(
+          session.question,
+          value,
+          elapsed / 1000,
+          session.zenWrongAttemptsOnQuestion,
+        )),
+        zenWrongAttemptsOnQuestion: 0,
+        zenLastWrongAttempt: undefined,
         score: session.score + 1,
         correct: session.correct + 1,
         streak: session.streak + 1,
@@ -622,30 +673,27 @@ function App() {
       wrongCurrentRef.current = ''
       return
     }
-    if (value.length < answerLength) wrongCurrentRef.current = ''
-    if (value.length === answerLength && value !== String(session.question.answer)) {
-      const attempt = `${session.questionNumber}:${value}`
-      if (wrongCurrentRef.current !== attempt) {
-        wrongCurrentRef.current = attempt
-        setSession({
-          ...session,
-          zenWrongAttempts: session.zenWrongAttempts + 1,
-          streak: 0,
-          missed: recordMissed(session.missed, {
-            text: session.question.text,
-            answer: session.question.answer,
-            given: value,
-            reason: 'wrong',
-          }),
-        })
-        triggerFx('wrong')
-        clearWrongClearTimeout()
-        wrongClearTimeoutRef.current = window.setTimeout(() => {
-          wrongClearTimeoutRef.current = null
-          setAnswer('')
-          wrongCurrentRef.current = ''
-        }, 350)
-      }
+    if (status === 'wrong' && wrongAttemptCycle.countWrong) {
+      setSession({
+        ...session,
+        zenWrongAttempts: session.zenWrongAttempts + 1,
+        zenWrongAttemptsOnQuestion: session.zenWrongAttemptsOnQuestion + 1,
+        zenLastWrongAttempt: value,
+        streak: 0,
+        missed: recordMissed(session.missed, {
+          text: session.question.text,
+          answer: session.question.answer,
+          given: value,
+          reason: 'wrong',
+        }),
+      })
+      triggerFx('wrong')
+      clearWrongClearTimeout()
+      wrongClearTimeoutRef.current = window.setTimeout(() => {
+        wrongClearTimeoutRef.current = null
+        setAnswer('')
+        wrongCurrentRef.current = ''
+      }, 350)
     }
   }
 
@@ -676,6 +724,9 @@ function App() {
       skipped: session.skipped + 1,
       streak: 0,
       questionStartedAt: now,
+      log: appendLog(session.log, timeAttackSkipEntry(session.question, session.zenLastWrongAttempt)),
+      zenWrongAttemptsOnQuestion: 0,
+      zenLastWrongAttempt: undefined,
       missed: session.missed.some(({ text }) => text === session.question.text)
         ? session.missed
         : [...session.missed, {
@@ -686,7 +737,7 @@ function App() {
     }
     setSession(nextSession)
     triggerFx('skip')
-    if (deadline <= now) finishGame(nextSession)
+    if (deadline <= now) finishGame(nextSession, false)
   }, [session, finishGame, clearWrongClearTimeout, triggerFx, quitConfirm])
 
   useEffect(() => {
@@ -740,20 +791,15 @@ function App() {
   }, [screen, cancelCountdown])
 
   useEffect(() => {
-    const timeoutId = wrongClearTimeoutRef.current
-    return () => {
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId)
-        if (wrongClearTimeoutRef.current === timeoutId) wrongClearTimeoutRef.current = null
-      }
-    }
-  }, [screen, session?.questionNumber])
+    return () => clearWrongClearTimeout()
+  }, [screen, session?.questionNumber, clearWrongClearTimeout])
 
   useEffect(() => {
     if (screen !== 'results' || !result) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' && event.key.toLowerCase() !== 'r') return
       if (result.mode === 'Défi Quotidien') return
+      if (isInteractiveTarget(event.target)) return
       event.preventDefault()
       if (!replayHotkeyReady) return
       const last = lastSetupRef.current
@@ -811,9 +857,7 @@ function App() {
 
   return (
     <>
-      <AmbientBubbles group="back" />
-      <Decor />
-      <AmbientBubbles group="front" />
+      <div className="waves" aria-hidden="true" />
       {screen !== 'game' && (
         <TopControls
           soundOn={soundOn}
@@ -822,6 +866,7 @@ function App() {
           onToggleMotion={toggleMotion}
         />
       )}
+      <div className="app-view">
       {screen === 'countdown' && countdownValue !== null && (
         <Countdown value={countdownValue} onQuit={cancelCountdown} />
       )}
@@ -834,7 +879,6 @@ function App() {
           onZen={() => setScreen('zen-setup')}
           onDaily={() => {
             if (dailyPlayed) return
-            setDailySetupDate(new Date())
             setScreen('daily-setup')
           }}
           onRecords={() => setScreen('records')}
@@ -844,12 +888,12 @@ function App() {
       {showLevelsSetup && <NiveauxSetup onStart={(level) => startLevels(level)} onBack={returnHome} />}
       {showDailySetup && (
         <DailySetup
-          date={dailySetupDate!}
+          date={dateFromKey(currentDate)}
           onStart={() => startLevels(2, true)}
           onBack={returnHome}
         />
       )}
-      {showZenSetup && <ZenSetup onStart={startZen} onBack={returnHome} />}
+      {showZenSetup && <ZenSetup onStart={startZen} onBack={returnHome} bestScores={storedData.bestScores} />}
       {screen === 'game' && session?.mode === 'Chrono libre' && (
         <ZenGame
           session={session}
@@ -899,6 +943,7 @@ function App() {
       )}
       {screen === 'records' && <Records data={storedData} onBack={returnHome} />}
       {screen === 'achievements' && <Succes data={storedData} onBack={returnHome} />}
+      </div>
       <AchievementToast achievements={toast} onDismiss={dismissToast} />
     </>
   )

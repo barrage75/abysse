@@ -40,6 +40,24 @@ export function validateZenConfig(config: ZenConfig): ZenErrors {
   return errors
 }
 
+export type ZenAttemptStatus = 'correct' | 'wrong' | 'pending'
+
+export function zenAttemptStatus(value: string, answer: number): ZenAttemptStatus {
+  if (value === '') return 'pending'
+  if (Number(value) === answer) return 'correct'
+  return value.length >= String(answer).length ? 'wrong' : 'pending'
+}
+
+export function updateZenWrongAttemptCycle(
+  currentKey: string,
+  status: ZenAttemptStatus,
+  questionNumber: number,
+): { key: string; countWrong: boolean } {
+  if (status !== 'wrong') return { key: '', countWrong: false }
+  const key = String(questionNumber)
+  return { key, countWrong: currentKey !== key }
+}
+
 function generateZenCandidate(rng: RandomSource, selected: Operation): Question {
   if (selected === '-') {
     const first = Math.floor(rng() * 99) + 2
