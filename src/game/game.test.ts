@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ACHIEVEMENTS, evaluate, type AchievementStats } from './achievements'
-import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion } from './daily'
+import { DAILY_LEVEL_SCHEDULE, DAILY_QUESTION_COUNT, dailyQuestion, refreshDateKey } from './daily'
 import { LEVELS } from './levels'
 import { generateQuestion, nextLevelQuestion, configFromLevel } from './questions'
 import { recordMissed, resolveSkipped } from './review'
@@ -9,6 +9,7 @@ import { adjustedScore, progressAfterCorrectAnswer, scoreCorrectAnswer } from '.
 import {
   emptyGameData,
   isDailyPlayed,
+  bestNiveauxScore,
   readGameData,
   saveGameRecord,
   STORAGE_KEY,
@@ -35,6 +36,11 @@ describe('randomness and dates', () => {
   it('hashes local calendar dates consistently and distinguishes days', () => {
     expect(seedFromDate(new Date(2025, 4, 8, 1))).toBe(seedFromDate(new Date(2025, 4, 8, 23)))
     expect(seedFromDate(new Date(2025, 4, 8))).not.toBe(seedFromDate(new Date(2025, 4, 9)))
+  })
+
+  it('refreshes the active daily date after midnight', () => {
+    expect(refreshDateKey('2025-05-08', new Date(2025, 4, 9, 0, 1))).toBe('2025-05-09')
+    expect(refreshDateKey('2025-05-09', new Date(2025, 4, 9, 12))).toBe('2025-05-09')
   })
 
   it('generates the same daily question sequence for everyone on the same date', () => {
@@ -92,6 +98,15 @@ describe('question generation', () => {
     for (let index = 0; index < 2000; index += 1) {
       expect(generateQuestion(rng, config).answer).not.toBe(0)
     }
+  })
+
+  it('rejects a no-negative subtraction range that cannot produce a nonzero result', () => {
+    const config: ReturnType<typeof configFromLevel> = {
+      ...configFromLevel(LEVELS[0]),
+      operations: ['-'],
+      subtraction: { min: 2, max: 2 },
+    }
+    expect(() => generateQuestion(() => 0, config)).toThrow(RangeError)
   })
 
   it('avoids recently used questions in levels mode', () => {
@@ -366,6 +381,7 @@ describe('local storage', () => {
 
     const migrated = readGameData(storage)
     expect(migrated.bestScores.Niveaux.score).toBe(450)
+    expect(bestNiveauxScore(migrated)).toBe(450)
     expect(migrated.levelsBestAdjusted).toBe(true)
 
     const saved = saveGameRecord({ ...legacyRecord, score: 200, adjustedScore: 300 }, storage)
@@ -385,6 +401,7 @@ describe('local storage', () => {
 
     const migrated = readGameData(storage)
     expect(migrated.bestScores.Niveaux.score).toBe(500)
+    expect(bestNiveauxScore(migrated)).toBe(500)
     expect(migrated.levelsBestAdjusted).toBe(true)
   })
 
@@ -394,6 +411,52 @@ describe('local storage', () => {
       setItem: () => undefined,
     }
     expect(readGameData(storage)).toEqual(emptyGameData())
+  })
+
+  it('drops malformed entries from otherwise valid saved JSON', () => {
+    const storage: StorageLike = {
+      getItem: () => JSON.stringify({
+        version: 1,
+        bestScores: {
+          Niveaux: null,
+          bad: { score: 'high' },
+          invalidDate: { score: 10, date: '2025-02-31', accuracy: 100 },
+        },
+        achievements: [null, { id: 'known', date: '2025-05-08' }, { id: 'bad-date', date: '2025-02-31' }],
+        dailyResults: [null, { date: '2025-05-08', score: 'high' }, { date: '2025-02-31' }],
+        history: [
+          null,
+          { mode: 'Niveaux', score: 'high' },
+          { mode: 'Niveaux', score: 10, date: '2025-02-31', accuracy: 100, averageResponseTime: 1, bestStreak: 1 },
+        ],
+        levelsBestAdjusted: true,
+      }),
+      setItem: () => undefined,
+    }
+
+    expect(readGameData(storage)).toEqual({
+      ...emptyGameData(),
+      achievements: [{ id: 'known', date: '2025-05-08' }],
+    })
+  })
+
+  it('keeps a completed result usable when storage writes fail', () => {
+    const storage: StorageLike = {
+      getItem: () => null,
+      setItem: () => { throw new Error('Quota exceeded') },
+    }
+    const saved = saveGameRecord({
+      mode: 'Niveaux',
+      score: 100,
+      adjustedScore: 100,
+      date: '2025-05-08',
+      accuracy: 100,
+      averageResponseTime: 2,
+      bestStreak: 1,
+    }, storage)
+
+    expect(saved.isNewRecord).toBe(true)
+    expect(saved.data.bestScores.Niveaux.score).toBe(100)
   })
 
   it('does not lock during setup/countdown and locks only after a finished result is saved', () => {

@@ -1,11 +1,16 @@
 import { getLevel } from './levels'
 import { configFromLevel, generateQuestion, type Question } from './questions'
-import { mulberry32, seedFromDate } from './rng'
+import { dateKey, mulberry32, seedFromDate } from './rng'
 
 export const DAILY_QUESTION_COUNT = 20
 export const DAILY_LEVEL_SCHEDULE = [
   2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6,
 ] as const
+
+export function refreshDateKey(current: string, now: Date): string {
+  const today = dateKey(now)
+  return current === today ? current : today
+}
 
 export interface DailyQuestion {
   question: Question

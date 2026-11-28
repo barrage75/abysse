@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AchievementToast } from './components/AchievementToast'
 import { TopControls } from './components/TopControls'
 import { evaluate } from './game/achievements'
-import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
+import { DAILY_QUESTION_COUNT, dailyQuestion, refreshDateKey } from './game/daily'
+import { isInteractiveTarget } from './game/keyboard'
 import { getLevel } from './game/levels'
 import { configFromLevel, nextLevelQuestion } from './game/questions'
 import { recordMissed, resolveSkipped } from './game/review'
@@ -12,6 +13,7 @@ import { readMotionEnabled, setMotionEnabled } from './game/motion'
 import { playSound, primeSound, readSoundEnabled, setSoundEnabled } from './game/sound'
 import {
   isDailyPlayed,
+  bestNiveauxScore,
   readGameData,
   saveGameRecord,
   unlockAchievements,
@@ -68,7 +70,6 @@ function App() {
   const [clock, setClock] = useState(() => Date.now())
   const [currentDate, setCurrentDate] = useState(() => dateKey(new Date()))
   const [pausedAt, setPausedAt] = useState<number | null>(null)
-  const [dailySetupDate, setDailySetupDate] = useState<Date | null>(null)
   const [countdownReturnScreen, setCountdownReturnScreen] = useState<Screen>('home')
   const dismissToast = useCallback(() => setToast([]), [])
   const rngRef = useRef<RandomSource>(Math.random)
@@ -85,12 +86,7 @@ function App() {
 
   const dailyPlayed = isDailyPlayed(currentDate)
   const todayDailyScore = storedData.dailyResults.find((daily) => daily.date === currentDate)?.score
-  const bestAdjustedNiveauxScore = storedData.history.reduce(
-    (best, record) => record.mode === 'Niveaux'
-      ? Math.max(best, record.adjustedScore ?? 0)
-      : best,
-    0,
-  )
+  const bestAdjustedNiveauxScore = bestNiveauxScore(storedData)
   const bestZenScore = session?.mode === 'Chrono libre' && session.duration
     ? storedData.bestScores[`Chrono libre:${zenComboKey({
       duration: session.duration,
@@ -141,6 +137,27 @@ function App() {
   }, [])
 
   useEffect(() => () => clearLevelUpTimeout(), [clearLevelUpTimeout])
+
+  useEffect(() => {
+    let timeout: number | undefined
+    const refreshDate = () => {
+      const now = new Date()
+      setCurrentDate((current) => refreshDateKey(current, now))
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime()
+      timeout = window.setTimeout(refreshDate, Math.max(1, nextMidnight - now.getTime() + 50))
+    }
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        setCurrentDate((current) => refreshDateKey(current, new Date()))
+      }
+    }
+    refreshDate()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => {
+      if (timeout !== undefined) window.clearTimeout(timeout)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
 
   useEffect(() => {
     if (screen !== 'game') return
@@ -736,20 +753,15 @@ function App() {
   }, [screen, cancelCountdown])
 
   useEffect(() => {
-    const timeoutId = wrongClearTimeoutRef.current
-    return () => {
-      if (timeoutId !== null) {
-        window.clearTimeout(timeoutId)
-        if (wrongClearTimeoutRef.current === timeoutId) wrongClearTimeoutRef.current = null
-      }
-    }
-  }, [screen, session?.questionNumber])
+    return () => clearWrongClearTimeout()
+  }, [screen, session?.questionNumber, clearWrongClearTimeout])
 
   useEffect(() => {
     if (screen !== 'results' || !result) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Enter' && event.key.toLowerCase() !== 'r') return
       if (result.mode === 'Défi Quotidien') return
+      if (isInteractiveTarget(event.target)) return
       event.preventDefault()
       if (!replayHotkeyReady) return
       const last = lastSetupRef.current
@@ -829,7 +841,6 @@ function App() {
           onZen={() => setScreen('zen-setup')}
           onDaily={() => {
             if (dailyPlayed) return
-            setDailySetupDate(new Date())
             setScreen('daily-setup')
           }}
           onRecords={() => setScreen('records')}
@@ -839,7 +850,7 @@ function App() {
       {showLevelsSetup && <NiveauxSetup onStart={(level) => startLevels(level)} onBack={returnHome} />}
       {showDailySetup && (
         <DailySetup
-          date={dailySetupDate!}
+          date={dateFromKey(currentDate)}
           onStart={() => startLevels(2, true)}
           onBack={returnHome}
         />

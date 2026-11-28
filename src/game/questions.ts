@@ -51,6 +51,9 @@ export function generateQuestion(rng: RandomSource, config: QuestionConfig): Que
   }
 
   if (op === '-') {
+    if (!config.allowNegative && config.subtraction.min === config.subtraction.max) {
+      throw new RangeError('Subtraction range must contain distinct values.')
+    }
     let left = integerInRange(rng, config.subtraction)
     let right = integerInRange(rng, config.subtraction)
     while (!config.allowNegative && left === right) {
