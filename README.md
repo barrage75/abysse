@@ -1,7 +1,7 @@
 # ABYSSE — Arcade Pop
 
 <p align="center">
-  <img src="docs/media/hero.png" alt="Accueil d’ABYSSE" width="900">
+  <img src="docs/media/home.webp" alt="Accueil ABYSSE et choix des thèmes" width="900">
 </p>
 
 Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en anglais. Choisissez parmi six thèmes de couleur ; vos parties, records et préférences restent dans votre navigateur.
@@ -9,7 +9,7 @@ Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en an
 ## Aperçu
 
 <p align="center">
-  <strong>Une partie en mode Niveaux</strong> — chaque calcul reste lisible, avec les points gagnés et la liste « À revoir » à la fin<br>
+  <strong>Une partie en mode Niveaux</strong> — calculs, points et historique détaillé des réponses<br>
   <img src="docs/media/levels.webp" alt="Partie complète en mode Niveaux" width="720">
 </p>
 
@@ -18,18 +18,18 @@ Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en an
   <img src="docs/media/time-attack.webp" alt="Partie complète en mode Chrono libre" width="720">
 </p>
 
-<p align="center"><a href="docs/media/demo.mp4">▶ Voir la vidéo de démo complète (1 min 30)</a></p>
+<p align="center"><a href="docs/media/demo.mp4">▶ Voir la vidéo de démo complète (1 min 20)</a></p>
 
 <table>
   <tr>
-    <td align="center"><strong>Accueil</strong><br><img src="docs/media/home.gif" alt="Accueil animé" width="420"></td>
-    <td align="center"><strong>Défi du jour</strong><br><img src="docs/media/daily.gif" alt="Présentation et partie du défi quotidien" width="420"></td>
+    <td align="center"><strong>Accueil et thèmes</strong><br><img src="docs/media/home.webp" alt="Accueil avec changement de thème" width="420"></td>
+    <td align="center"><strong>Défi du jour</strong><br><img src="docs/media/daily.webp" alt="Partie mobile du défi du jour et historique" width="420"></td>
   </tr>
 </table>
 
 <p align="center">
   <strong>Sur mobile — interface en anglais</strong><br>
-  <img src="docs/media/mobile-en.gif" alt="ABYSSE sur mobile en anglais" width="300">
+  <img src="docs/media/mobile-en.webp" alt="ABYSSE en anglais avec le détail d’une partie" width="300">
 </p>
 
 ## Modes de jeu
@@ -63,7 +63,7 @@ Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en an
 - Interface responsive et pavé numérique tactile avec bouton **Valider** ; animations activées par défaut, désactivables avec le bouton dédié.
 - Les points gagnés s’affichent à chaque bonne réponse et la barre de temps passe au rouge quand il reste peu de temps.
 - La fenêtre « Quitter ? » met la partie en pause : le chrono s’arrête et la question est masquée.
-- En fin de partie, la liste **À revoir** montre les calculs ratés, passés ou hors délai avec la bonne réponse.
+- Chaque partie conserve un historique chronologique des bonnes réponses, erreurs et calculs sans réponse, consultable dans les résultats et les records.
 
 ## Lancer le jeu
 
@@ -101,6 +101,7 @@ React · TypeScript · Vite · Vitest · Web Audio API · Baloo 2
 - **Daily Challenge:** the same 20-question sequence for everyone each day; one completed run counts.
 - Animations are on by default and can be turned off with the motion button.
 - Choose Lagon, Corail, Nuit, Algue, Bonbon, or Soleil; the selected theme is saved on this device.
-- Points pop up after each correct answer, the quit dialog pauses the game, and the results screen lists the questions to review.
+- Each game keeps a chronological history of correct, wrong, and unanswered questions, available in results and Records.
+- Points pop up after each correct answer, and the quit dialog pauses the game.
 
 Run locally with `npm install` and `npm run dev`; build with `npm run build` and test with `npm test`.
