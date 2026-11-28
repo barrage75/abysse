@@ -58,11 +58,14 @@ const en = {
     dailyLabel: 'Daily Challenge',
     dailyPlayed: (score: string) => `Today’s score: ${score}`,
     dailyAvailable: 'Same set for everyone',
+    dailyStatusPlayed: (score: string) => `Done · ${score}`,
+    dailyStatusAvailable: 'Play today',
     recordsLabel: 'Records',
     achievementsLabel: 'Achievements',
     achievementCount: (count: number, total: number) => `${count} of ${total}`,
     bestAria: 'Best score',
     bestLabel: 'Best score',
+    chronoBestLabel: 'Time record',
     offline: 'Offline. Your scores stay on this device.',
   },
   setup: {
@@ -147,6 +150,27 @@ const en = {
     dailyShare: (date: string, score: string, correct: number, streak: number) =>
       `ABYSSE · Daily ${date} · ${score} pts · ${correct}/20 ✓ · Streak ${streak}`,
   },
+  gameLog: {
+    title: 'Game details',
+    filterLabel: 'Filter questions',
+    filters: {
+      all: (count: number) => `All (${count})`,
+      correct: (count: number) => `Correct (${count})`,
+      wrong: (count: number) => `Wrong (${count})`,
+      unanswered: (count: number) => `Unanswered (${count})`,
+    },
+    status: {
+      correct: 'Correct answer',
+      wrong: 'Wrong answer',
+      timeout: "Time's up",
+      skipped: 'Skipped',
+    },
+    attemptNote: (count: number) => count === 1 ? ' · 1 miss before' : ` · ${count} misses before`,
+    yourAnswer: (answer: string) => `your answer: ${answer}`,
+    timeout: "time's up",
+    skipped: 'skipped',
+    empty: 'Nothing here.',
+  },
   records: {
     eyebrow: 'On this device',
     title: 'Records',
@@ -158,6 +182,10 @@ const en = {
     duration: (seconds: number) => `${seconds} sec`,
     secondsUnit: 'sec',
     average: (time: string) => `average ${time} sec`,
+    backToList: '← Records',
+    score: 'Score',
+    detailSummary: 'Game summary',
+    detailsUnavailable: 'details unavailable',
   },
   achievements: {
     title: 'Achievements',

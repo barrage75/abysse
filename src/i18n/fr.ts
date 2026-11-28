@@ -63,11 +63,14 @@ const fr = {
     dailyLabel: 'Défi du jour',
     dailyPlayed: (score: string) => `Score du jour : ${score}`,
     dailyAvailable: 'Même série pour tous',
+    dailyStatusPlayed: (score: string) => `Fait · ${score}`,
+    dailyStatusAvailable: 'À jouer',
     recordsLabel: 'Records',
     achievementsLabel: 'Succès',
     achievementCount: (count: number, total: number) => `${count} sur ${total}`,
     bestAria: 'Meilleur score',
     bestLabel: 'Meilleur score',
+    chronoBestLabel: 'Record chrono',
     offline: 'Hors ligne. Tes scores restent sur cet appareil.',
   },
   setup: {
@@ -152,6 +155,27 @@ const fr = {
     dailyShare: (date: string, score: string, correct: number, streak: number) =>
       `ABYSSE · Défi du ${date} · ${score} pts · ${correct}/20 ✓ · Série ${streak}`,
   },
+  gameLog: {
+    title: 'Détail de la partie',
+    filterLabel: 'Filtrer les calculs',
+    filters: {
+      all: (count: number) => `Toutes (${count})`,
+      correct: (count: number) => `Bonnes (${count})`,
+      wrong: (count: number) => `Mauvaises (${count})`,
+      unanswered: (count: number) => `Sans réponse (${count})`,
+    },
+    status: {
+      correct: 'Bonne réponse',
+      wrong: 'Mauvaise réponse',
+      timeout: 'Temps écoulé',
+      skipped: 'Passée',
+    },
+    attemptNote: (count: number) => count === 1 ? ' · 1 erreur avant' : ` · ${count} erreurs avant`,
+    yourAnswer: (answer: string) => `ta réponse : ${answer}`,
+    timeout: 'temps écoulé',
+    skipped: 'passée',
+    empty: 'Aucun calcul ici.',
+  },
   records: {
     eyebrow: 'Sur cet appareil',
     title: 'Records',
@@ -163,6 +187,10 @@ const fr = {
     duration: (seconds: number) => `${seconds} s`,
     secondsUnit: 's',
     average: (time: string) => `moyenne ${time} s`,
+    backToList: '← Records',
+    score: 'Score',
+    detailSummary: 'Résumé de la partie',
+    detailsUnavailable: 'détail indisponible',
   },
   achievements: {
     title: 'Succès',

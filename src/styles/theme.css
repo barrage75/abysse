@@ -371,6 +371,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 }
 
 .stat-tile strong { overflow: hidden; color: var(--a); font-size: 19px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.stat-daily strong { font-size: 14px; }
 .stat-tile small { overflow: hidden; color: var(--tile-text); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .home-footer { margin: 12px 0 0; color: var(--on-bg); font-size: 12px; font-weight: 500; text-align: center; }
 
@@ -489,12 +490,12 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .question-timer { height: 20px; overflow: hidden; margin: 12px 0; border: 3px solid var(--ink); border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--ink); }
 .question-timer div { height: 100%; border-radius: 6px; background: var(--a); transition: width .1s linear; }
 .question-timer.is-low div { background: var(--h); animation: timer-pulse 1s ease-in-out infinite alternate; }
-.game-octo { display: block; width: 66px; height: 66px; margin: 5px auto 0; }
+.game-octo { position: absolute; z-index: 3; top: -25px; left: 12px; display: block; width: 48px; height: 48px; margin: 0; }
 
 .question-area {
   position: relative;
   z-index: 2 !important;
-  margin: 12px 0 10px;
+  margin: 28px 0 10px;
   padding: 18px 16px 16px;
   border: 3px solid var(--ink);
   border-radius: 26px;
@@ -506,7 +507,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 
 .question-area.is-paused { filter: blur(10px); opacity: .5; }
 .question-count { margin: 0; color: var(--mut); font-size: 14px; font-weight: 700; }
-.question-text { margin: 4px 0 12px; overflow-wrap: anywhere; color: var(--ct); font-size: clamp(48px, 15vw, 64px); font-weight: 800; line-height: 1; }
+.question-area .question-text { margin: 4px 0 12px; color: var(--ct); font-size: clamp(52px, 14vw, 64px); font-weight: 800; line-height: 1; white-space: nowrap; }
 .question-text span { color: var(--mut); }
 .combo-badge { display: inline-block; margin-top: 3px; padding: 2px 10px; border: 2px solid var(--ink); border-radius: 10px; background: var(--a); color: var(--ink); font-weight: 800; }
 
@@ -562,6 +563,23 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .review-equation { overflow-wrap: anywhere; color: var(--ct); font-size: 14px; font-weight: 800; }
 .review-equation strong { padding: 0 4px; border-radius: 7px; background: var(--g); color: var(--ink); }
 .review-note { flex: 0 0 auto; color: var(--mut); font-size: 11px; font-weight: 700; text-align: right; }
+.game-log { margin: 12px 0; padding: 12px; border: 3px solid var(--ink); border-radius: 18px; background: var(--card); box-shadow: 0 4px 0 var(--ink); text-align: left; }
+.game-log h2 { margin: 0 0 8px; color: var(--ct); font-size: 20px; font-weight: 800; }
+.game-log-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.game-log-filter { min-height: 44px; flex: 1 1 auto; padding: 4px 9px; border: 2px solid var(--ink); border-radius: 12px; background: var(--soft); color: var(--ct); font-size: 13px; font-weight: 800; }
+.game-log-filter.is-active { background: var(--a); color: var(--ink); }
+.game-log-list { display: grid; margin: 8px 0 0; padding: 0; list-style: none; }
+.game-log-row { display: grid; grid-template-columns: 22px 28px minmax(0, 1fr); align-items: start; gap: 5px; padding: 6px 0; border-top: 2px dashed var(--soft); }
+.game-log-mark { font-size: 20px; font-weight: 800; line-height: 1.1; text-align: center; }
+.game-log-mark.is-correct { color: var(--g); }
+.game-log-mark.is-wrong { color: var(--h); }
+.game-log-mark.is-unanswered { color: var(--mut); }
+.game-log-number { color: var(--mut); font-size: 13px; font-weight: 800; text-align: right; }
+.game-log-copy { display: grid; min-width: 0; }
+.game-log-equation { overflow-wrap: anywhere; color: var(--ct); font-size: 15px; font-weight: 800; }
+.game-log-equation strong { padding: 0 4px; border-radius: 7px; background: var(--g); color: var(--ink); }
+.game-log-note { overflow-wrap: anywhere; color: var(--mut); font-size: 12px; font-weight: 700; }
+.game-log-empty { margin: 6px 0 0; color: var(--mut); font-weight: 700; }
 .result-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
 .result-actions .button { min-width: 130px; }
 
@@ -570,10 +588,15 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .record-section h2 { margin: 0 0 8px; font-size: 20px; font-weight: 800; }
 .best-list, .history-list { display: grid; gap: 8px; }
 .best-row, .history-row { display: flex; min-width: 0; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 10px; border: 2px solid var(--ink); border-radius: 14px; background: var(--soft); color: var(--ct); }
+.history-row-button { width: 100%; font: inherit; text-align: left; }
+.history-details-unavailable { color: var(--mut); font-size: 10px; font-weight: 700; }
 .best-row strong, .history-score strong { color: var(--ct); font-size: 18px; font-weight: 800; }
 .history-row > div, .history-score { display: grid; min-width: 0; }
 .history-row span, .history-score span, .empty-copy { color: var(--mut); font-size: 12px; font-weight: 700; }
 .history-score { text-align: right; }
+.record-detail-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0; }
+.record-detail-summary > div { display: grid; gap: 2px; padding: 8px; border: 2px solid var(--ink); border-radius: 14px; background: var(--soft); color: var(--mut); font-size: 12px; font-weight: 700; }
+.record-detail-summary strong { color: var(--ct); font-size: 20px; font-weight: 800; }
 .achievement-grid { display: grid; gap: 9px; }
 .achievement-card { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 2px solid var(--ink); border-radius: 15px; background: var(--soft); }
 .achievement-card.is-unlocked { background: var(--soft); }
@@ -592,8 +615,11 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   .home-tagline { font-size: 17px; }
   .mode-card { min-height: 72px; }
   .game-page { padding-top: 6px; }
-  .question-text { font-size: clamp(58px, 6vw, 76px); }
   .result-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (min-width: 768px) {
+  .question-area .question-text { font-size: clamp(80px, 7vw, 88px); }
 }
 
 @media (max-width: 390px) {

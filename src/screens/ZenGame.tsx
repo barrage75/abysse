@@ -75,13 +75,13 @@ export function ZenGame({
         <span>{session.operations?.join('  ')}</span>
         <button className="button button-secondary skip-button" disabled={quitConfirm} onClick={onSkip}>{t.game.skip}</button>
       </section>
-      <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
       <section className={`question-area zen-question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
+        <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
         <p className="question-count">{t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
           <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
         )}
-        <h1 className="question-text" key={session.questionNumber} data-fx={fx?.kind}>
+        <h1 className="question-text" data-fx={fx?.kind}>
           {session.question.text} <span>=</span>
         </h1>
         <label className="visually-hidden" htmlFor="zen-answer">{t.game.answerLabel}</label>

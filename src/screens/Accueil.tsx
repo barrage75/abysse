@@ -44,8 +44,8 @@ export function Accueil({
   const best = Math.max(levelsBest, dailyBest)
   const achievements = data.achievements.length
   const dailyStatus = dailyPlayed
-    ? t.home.dailyPlayed(formatScore(dailyScore ?? 0))
-    : t.home.dailyAvailable
+    ? t.home.dailyStatusPlayed(formatScore(dailyScore ?? 0))
+    : t.home.dailyStatusAvailable
 
   return (
     <main className="home page-shell">
@@ -107,13 +107,12 @@ export function Accueil({
           <strong>{best ? formatScore(best) : '—'}</strong>
         </div>
         <div className="stat-tile">
-          <span>{t.home.achievementsLabel}</span>
-          <strong>{achievements}/{ACHIEVEMENTS.length}</strong>
+          <span>{t.home.chronoBestLabel}</span>
+          <strong>{zenBest ? formatScore(zenBest) : '—'}</strong>
         </div>
         <div className="stat-tile stat-daily">
           <span>{t.home.dailyLabel}</span>
-          <strong>{dailyPlayed ? '✓' : '·'}</strong>
-          <small>{dailyStatus}</small>
+          <strong>{dailyStatus}</strong>
         </div>
       </section>
 

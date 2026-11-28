@@ -89,15 +89,15 @@ export function NiveauxGame({
         <div style={{ width: `${progress}%` }} />
       </div>
 
-      <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
       <section className={`question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
+        <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
         <p className="question-count">{isDaily
           ? t.game.dailyQuestion(session.questionNumber, 20)
           : t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
           <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
         )}
-        <h1 className="question-text" key={session.questionNumber} data-fx={fx?.kind}>
+        <h1 className="question-text" data-fx={fx?.kind}>
           {session.question.text} <span>=</span>
         </h1>
         <form
