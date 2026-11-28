@@ -25,7 +25,9 @@ export function NiveauxSetup({ onStart, onBack }: NiveauxSetupProps) {
       if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
       event.preventDefault()
       const direction = event.key === 'ArrowUp' ? 1 : -1
-      const next = Math.max(1, Math.min(LEVELS.length, selectedLevelRef.current + direction))
+      const focusedLevel = target?.closest<HTMLElement>('.level-floor')?.dataset.level
+      const currentLevel = focusedLevel === undefined ? selectedLevelRef.current : Number(focusedLevel)
+      const next = Math.max(1, Math.min(LEVELS.length, currentLevel + direction))
       selectedLevelRef.current = next
       setSelectedLevel(next)
       window.requestAnimationFrame(() => floorRefs.current.get(next)?.focus())
@@ -50,6 +52,7 @@ export function NiveauxSetup({ onStart, onBack }: NiveauxSetupProps) {
           <button
             key={level.id}
             type="button"
+            data-level={level.id}
             ref={(button) => {
               if (button) floorRefs.current.set(level.id, button)
               else floorRefs.current.delete(level.id)
