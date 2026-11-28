@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { GameLog } from '../components/GameLog'
 import { Octo } from '../components/Octo'
 import { formatDailyShareText } from '../game/sharing'
 import { useLang } from '../i18n/useLang'
@@ -73,25 +74,7 @@ export function FinDePartie({ result, onReplay, onHome }: FinDePartieProps) {
         <div><span>{t.results.correctAnswers}</span><strong>{result.correct}</strong></div>
         {result.mode === 'Chrono libre' && <div><span>{t.results.skipped}</span><strong>{result.skipped}</strong></div>}
       </section>
-      {result.missed.length > 0 && (
-        <section className="result-review">
-          <h2>{t.results.toReview}</h2>
-          <ul className="review-list">
-            {result.missed.slice(0, 8).map((missed, index) => (
-              <li key={`${missed.text}-${index}`}>
-                <span className="review-equation">{missed.text} = <strong>{missed.answer}</strong></span>
-                <small className="review-note">
-                  {missed.reason === 'wrong'
-                    ? t.results.reviewWrong(missed.given ?? '')
-                    : missed.reason === 'timeout'
-                      ? t.results.reviewTimeout
-                      : t.results.reviewSkipped}
-                </small>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <GameLog entries={result.log} />
       <div className="result-actions">
         {result.mode !== 'Défi Quotidien' && <button className="button button-primary" onClick={onReplay}>{t.results.replay}</button>}
         {result.mode === 'Défi Quotidien' && (

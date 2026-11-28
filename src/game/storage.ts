@@ -1,5 +1,6 @@
 import type { ZenConfig } from './zen'
 import { zenComboKey } from './zen'
+import { MAX_LOG_ENTRIES, type QuestionLogEntry } from './log'
 
 export const STORAGE_KEY = 'jeu-calcul:v1'
 
@@ -16,6 +17,7 @@ export interface GameRecord {
   operations?: string[]
   adjustedScore?: number
   startingLevel?: number
+  log?: QuestionLogEntry[]
 }
 
 export interface BestScore {
@@ -104,6 +106,31 @@ function isDailyResult(value: unknown): value is DailyResult {
     && (value.score === undefined || (isFiniteNumber(value.score) && value.score >= 0))
 }
 
+function isQuestionLogEntry(value: unknown): value is QuestionLogEntry {
+  return isRecord(value)
+    && typeof value.text === 'string'
+    && value.text.length > 0
+    && isFiniteNumber(value.answer)
+    && (value.result === 'correct' || value.result === 'wrong' || value.result === 'timeout' || value.result === 'skipped')
+    && (value.given === undefined || typeof value.given === 'string')
+    && (value.seconds === undefined || (isFiniteNumber(value.seconds) && value.seconds >= 0))
+    && (value.attempts === undefined || (isFiniteNumber(value.attempts) && Number.isInteger(value.attempts) && value.attempts >= 0))
+}
+
+function normalizeGameRecord(record: GameRecord): GameRecord {
+  const { log, ...withoutLog } = record
+  if (!Array.isArray(log)) return withoutLog
+  return { ...withoutLog, log: log.filter(isQuestionLogEntry).slice(0, MAX_LOG_ENTRIES) }
+}
+
+function retainRecentLogs(history: GameRecord[]): GameRecord[] {
+  return history.map((record, index) => {
+    if (index < 20 || record.log === undefined) return record
+    const { log: _log, ...withoutLog } = record
+    return withoutLog
+  })
+}
+
 function normalizeGameData(value: unknown): StoredGameData {
   if (!isRecord(value) || value.version !== 1) return emptyGameData()
   const bestScores: Record<string, BestScore> = {}
@@ -113,7 +140,7 @@ function normalizeGameData(value: unknown): StoredGameData {
     }
   }
   const history = Array.isArray(value.history)
-    ? value.history.filter(isGameRecord).slice(0, 50)
+    ? retainRecentLogs(value.history.filter(isGameRecord).slice(0, 50).map(normalizeGameRecord))
     : []
   const achievements = Array.isArray(value.achievements)
     ? value.achievements.filter(isUnlockedAchievement)
@@ -195,7 +222,9 @@ export function saveGameRecord(
     : record.score
   const isNewRecord = !previous || bestScore > previous.score
 
-  data.history = [record, ...data.history].slice(0, 50)
+  data.history = retainRecentLogs(
+    [record, ...data.history].slice(0, 50).map(normalizeGameRecord),
+  )
   if (isNewRecord) {
     data.bestScores[key] = { score: bestScore, date: record.date, accuracy: record.accuracy }
   }

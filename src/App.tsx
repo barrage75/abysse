@@ -4,6 +4,7 @@ import { TopControls } from './components/TopControls'
 import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion, refreshDateKey } from './game/daily'
 import { isInteractiveTarget } from './game/keyboard'
+import { appendLog, roundLogSeconds, timeAttackCorrectEntry, timeAttackExpiryEntry, timeAttackSkipEntry } from './game/log'
 import { getLevel } from './game/levels'
 import { configFromLevel, nextLevelQuestion } from './game/questions'
 import { recordMissed, resolveSkipped } from './game/review'
@@ -216,9 +217,12 @@ function App() {
     }
   }, [])
 
-  const finishGame = useCallback((current: GameSession) => {
+  const finishGame = useCallback((game: GameSession, logCurrentQuestion = true) => {
     if (finalizedRef.current) return
     finalizedRef.current = true
+    const current = game.mode === 'Chrono libre' && logCurrentQuestion
+      ? { ...game, log: appendLog(game.log, timeAttackExpiryEntry(game.question, game.zenLastWrongAttempt)) }
+      : game
     playSound('end')
     const date = current.dailyDate ?? dateKey(new Date())
     const adjusted = current.mode === 'Niveaux'
@@ -245,6 +249,7 @@ function App() {
       startingLevel: current.startingLevel,
       duration: current.duration,
       operations: current.operations,
+      log: current.log,
     }
 
     const existing = readGameData()
@@ -297,6 +302,7 @@ function App() {
       duration: current.duration,
       isNewRecord: saved.isNewRecord,
       skipped: current.skipped,
+      log: current.log,
       missed: current.missed,
     })
     setScreen('results')
@@ -333,9 +339,11 @@ function App() {
       totalResponseMs: 0,
       responseCount: 0,
       zenWrongAttempts: 0,
+      zenWrongAttemptsOnQuestion: 0,
       zenRecent: [],
       zenRequeue: [],
       recentQuestions: mode === 'Niveaux' ? [firstQuestion.text] : [],
+      log: [],
       missed: [],
       dailyDate,
       skipped: 0,
@@ -393,9 +401,11 @@ function App() {
       duration: config.duration,
       operations: config.operations,
       zenWrongAttempts: 0,
+      zenWrongAttemptsOnQuestion: 0,
       zenRecent: firstQuestion.recent,
       zenRequeue: firstQuestion.requeue,
       recentQuestions: [],
+      log: [],
       missed: [],
       skipped: 0,
     }
@@ -490,6 +500,12 @@ function App() {
       questionStartedAt: now,
       totalResponseMs: session.totalResponseMs + elapsed,
       responseCount: session.responseCount + 1,
+      log: appendLog(session.log, {
+        text: question.text,
+        answer: question.answer,
+        result: timedOut ? 'timeout' : 'wrong',
+        ...(!timedOut ? { given: answer } : {}),
+      }),
       missed: [...session.missed, {
         text: question.text,
         answer: question.answer,
@@ -572,6 +588,13 @@ function App() {
       timeLimitSeconds: getLevel(nextLevel).secondsPerQuestion,
       totalResponseMs: session.totalResponseMs + elapsed * 1000,
       responseCount: session.responseCount + 1,
+      log: appendLog(session.log, {
+        text: session.question.text,
+        answer: session.question.answer,
+        result: 'correct',
+        given: answer,
+        seconds: roundLogSeconds(elapsed),
+      }),
       recentQuestions: !isDaily && !dailyFinished
         ? [...session.recentQuestions, nextQuestion.text].slice(-5)
         : session.recentQuestions,
@@ -622,6 +645,14 @@ function App() {
         zenRecent: next.recent,
         zenRequeue: next.requeue,
         missed: resolveSkipped(session.missed, session.question.text),
+        log: appendLog(session.log, timeAttackCorrectEntry(
+          session.question,
+          value,
+          elapsed / 1000,
+          session.zenWrongAttemptsOnQuestion,
+        )),
+        zenWrongAttemptsOnQuestion: 0,
+        zenLastWrongAttempt: undefined,
         score: session.score + 1,
         correct: session.correct + 1,
         streak: session.streak + 1,
@@ -643,6 +674,8 @@ function App() {
         setSession({
           ...session,
           zenWrongAttempts: session.zenWrongAttempts + 1,
+          zenWrongAttemptsOnQuestion: session.zenWrongAttemptsOnQuestion + 1,
+          zenLastWrongAttempt: value,
           streak: 0,
           missed: recordMissed(session.missed, {
             text: session.question.text,
@@ -689,6 +722,9 @@ function App() {
       skipped: session.skipped + 1,
       streak: 0,
       questionStartedAt: now,
+      log: appendLog(session.log, timeAttackSkipEntry(session.question, session.zenLastWrongAttempt)),
+      zenWrongAttemptsOnQuestion: 0,
+      zenLastWrongAttempt: undefined,
       missed: session.missed.some(({ text }) => text === session.question.text)
         ? session.missed
         : [...session.missed, {
@@ -699,7 +735,7 @@ function App() {
     }
     setSession(nextSession)
     triggerFx('skip')
-    if (deadline <= now) finishGame(nextSession)
+    if (deadline <= now) finishGame(nextSession, false)
   }, [session, finishGame, clearWrongClearTimeout, triggerFx, quitConfirm])
 
   useEffect(() => {
