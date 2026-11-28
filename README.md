@@ -1,7 +1,7 @@
 # ABYSSE — Arcade Pop
 
 <p align="center">
-  <img src="docs/media/abysse.gif" alt="Démo ABYSSE : thèmes, partie en mode Niveaux et détail de la partie" width="420">
+  <img src="docs/media/abysse.gif" alt="Démo ABYSSE : échauffement, partie en mode Niveaux et détail de la partie" width="420">
 </p>
 
 Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en anglais. Choisissez parmi six thèmes de couleur ; vos parties, records et préférences restent dans votre navigateur.
@@ -14,15 +14,15 @@ Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en an
 </p>
 
 <p align="center">
-  <strong>Chrono libre (30 s, les quatre opérations)</strong><br>
-  <img src="docs/media/time-attack.webp" alt="Partie complète en mode Chrono libre" width="720">
+  <strong>Chrono libre (60 s, multiplication activée)</strong><br>
+  <img src="docs/media/time-attack.webp" alt="Réglage et partie en mode Chrono libre" width="720">
 </p>
 
 <p align="center"><a href="docs/media/demo.mp4">▶ Voir la vidéo de démo complète (1 min 20)</a></p>
 
 <table>
   <tr>
-    <td align="center"><strong>Accueil et thèmes</strong><br><img src="docs/media/home.webp" alt="Accueil avec changement de thème" width="420"></td>
+    <td align="center"><strong>Accueil et thèmes</strong><br><img src="docs/media/home.webp" alt="Accueil avec calcul d’échauffement et changement de thème" width="420"></td>
     <td align="center"><strong>Défi du jour</strong><br><img src="docs/media/daily.webp" alt="Partie mobile du défi du jour et historique" width="420"></td>
   </tr>
 </table>
