@@ -499,6 +499,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .level-floor-copy { display: grid; min-width: 0; }
 .level-floor-copy strong { font-size: 16px; font-weight: 800; line-height: 1.05; }
 .level-floor-copy small { color: var(--mut); font-size: 12px; font-weight: 700; }
+.level-floor.is-selected .level-floor-copy small { color: var(--ink); }
 
 .level-option {
   display: grid;
