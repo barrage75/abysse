@@ -79,7 +79,7 @@ export function ZenGame({
         <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
         <p className="question-count">{t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
-          <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
+          <span className="combo-badge" key={`combo-${fx?.id ?? 0}`}>{t.game.combo} ×{session.streak}</span>
         )}
         <h1 className="question-text" data-fx={fx?.kind}>
           {session.question.text} <span>=</span>
@@ -103,7 +103,7 @@ export function ZenGame({
           onClear={onClear}
           disabled={quitConfirm}
         />
-        {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span> : null}
+        {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={`points-${fx.id}`} aria-hidden="true">+{fx.points}</span> : null}
       </section>
       {quitConfirm && (
         <div className="quit-overlay">

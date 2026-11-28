@@ -95,7 +95,7 @@ export function NiveauxGame({
           ? t.game.dailyQuestion(session.questionNumber, 20)
           : t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
-          <span className="combo-badge" key={session.streak}>{t.game.combo} ×{session.streak}</span>
+          <span className="combo-badge" key={`combo-${fx?.id ?? 0}`}>{t.game.combo} ×{session.streak}</span>
         )}
         <h1 className="question-text" data-fx={fx?.kind}>
           {session.question.text} <span>=</span>
@@ -131,7 +131,7 @@ export function NiveauxGame({
           disabled={quitConfirm}
         />
         {(fx?.kind === 'correct' || fx?.kind === 'levelup') && fx?.points !== undefined
-          ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span>
+          ? <span className="points-pop" key={`points-${fx.id}`} aria-hidden="true">+{fx.points}</span>
           : null}
       </section>
       {!isDaily && <p className="game-hint">{t.game.pointsSpeed}</p>}

@@ -23,18 +23,28 @@ function formatZenBest(key: string, t: ReturnType<typeof useLang>['t']): string 
 export function Records({ data, onBack }: RecordsProps) {
   const { lang, t } = useLang()
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const returnFocusRef = useRef<HTMLButtonElement | null>(null)
+  const rowButtonRefs = useRef(new Map<number, HTMLButtonElement>())
+  const returnFocusIndexRef = useRef<number | null>(null)
+  const detailBackRef = useRef<HTMLButtonElement | null>(null)
   const bests = Object.entries(data.bestScores)
   const selectedRecord = selectedIndex === null ? undefined : data.history[selectedIndex]
 
   useEffect(() => {
-    if (selectedIndex === null) returnFocusRef.current?.focus()
+    if (selectedIndex !== null) {
+      detailBackRef.current?.focus()
+      return
+    }
+    const index = returnFocusIndexRef.current
+    if (index !== null) {
+      rowButtonRefs.current.get(index)?.focus()
+      returnFocusIndexRef.current = null
+    }
   }, [selectedIndex])
 
   if (selectedRecord) {
     return (
       <main className="page-shell list-page record-detail-page">
-        <button className="back-button" onClick={() => setSelectedIndex(null)}>{t.records.backToList}</button>
+        <button ref={detailBackRef} className="back-button" onClick={() => setSelectedIndex(null)}>{t.records.backToList}</button>
         <p className="eyebrow">{formatDateKey(selectedRecord.date, lang)}</p>
         <h1>{modeLabel(selectedRecord.mode, t)}</h1>
         <section className="record-detail-summary" aria-label={t.records.detailSummary}>
@@ -98,8 +108,12 @@ export function Records({ data, onBack }: RecordsProps) {
                     className="history-row history-row-button"
                     type="button"
                     key={rowKey}
-                    onClick={(event) => {
-                      returnFocusRef.current = event.currentTarget
+                    ref={(node) => {
+                      if (node) rowButtonRefs.current.set(index, node)
+                      else rowButtonRefs.current.delete(index)
+                    }}
+                    onClick={() => {
+                      returnFocusIndexRef.current = index
                       setSelectedIndex(index)
                     }}
                   >

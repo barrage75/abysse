@@ -12,6 +12,7 @@ html[data-theme='lagon'],
   --h: #ff5d73;
   --g: #3ddc84;
   --o: #a66bff;
+  --timer-fill: var(--o);
   --on: #fff;
   --soft: #eef3ff;
 }
@@ -28,6 +29,7 @@ html[data-theme='corail'],
   --h: #7b5cff;
   --g: #2ec4b6;
   --o: #7b5cff;
+  --timer-fill: var(--o);
   --on: #2a1030;
   --soft: #ffe9d6;
 }
@@ -44,6 +46,7 @@ html[data-theme='nuit'],
   --h: #ff4fa3;
   --g: #3dffb0;
   --o: #9b7bff;
+  --timer-fill: var(--a);
   --on: #fff;
   --soft: #1b2256;
 }
@@ -60,6 +63,7 @@ html[data-theme='algue'],
   --h: #ff6b6b;
   --g: #c3f75a;
   --o: #ff8fd0;
+  --timer-fill: var(--ink);
   --on: #fff;
   --soft: #e6faf3;
 }
@@ -76,6 +80,7 @@ html[data-theme='bonbon'],
   --h: #ff5fa8;
   --g: #7ce38b;
   --o: #8a5cff;
+  --timer-fill: var(--o);
   --on: #3a1450;
   --soft: #fff0f8;
 }
@@ -92,6 +97,7 @@ html[data-theme='soleil'],
   --h: #e63946;
   --g: #2a9d8f;
   --o: #e63946;
+  --timer-fill: var(--g);
   --on: #2b1600;
   --soft: #fff0d4;
 }
@@ -436,10 +442,11 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .rules-list li::marker { color: var(--ct); }
 .setup-field { min-width: 0; margin: 16px 0; padding: 12px; border: 3px solid var(--ink); border-radius: 16px; }
 .setup-field legend { padding: 0 6px; font-weight: 800; }
-.operation-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.check-option { display: flex; min-height: 48px; align-items: center; gap: 8px; padding: 6px; border-radius: 12px; background: var(--soft); color: var(--ct); font-weight: 700; }
+.operation-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.check-option { display: flex; min-width: 0; min-height: 48px; align-items: center; gap: 8px; padding: 6px; border-radius: 12px; background: var(--soft); color: var(--ct); font-weight: 700; }
 .check-option input { width: 20px; height: 20px; accent-color: var(--g); }
 .operation-sign { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 10px; background: var(--a); color: var(--ink); font-weight: 800; }
+.check-option > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .field-error { margin: 8px 0 0; padding-left: 8px; border-left: 3px solid var(--h); color: var(--ct); font-weight: 800; }
 .duration-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
 .duration-option { min-height: 44px; padding: 4px; border: 3px solid var(--ink); border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--ink); color: var(--ct); font-size: 14px; font-weight: 800; }
@@ -488,8 +495,9 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .best-adjusted-score { overflow: hidden; color: var(--mut); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .global-timer { justify-self: end; color: var(--on-bg); font-size: 16px; font-weight: 800; }
 .question-timer { height: 20px; overflow: hidden; margin: 12px 0; border: 3px solid var(--ink); border-radius: 12px; background: var(--card); box-shadow: 0 3px 0 var(--ink); }
-.question-timer div { height: 100%; border-radius: 6px; background: var(--a); transition: width .1s linear; }
+.question-timer div { height: 100%; border-radius: 6px; background: var(--timer-fill); transition: width .1s linear; }
 .question-timer.is-low div { background: var(--h); animation: timer-pulse 1s ease-in-out infinite alternate; }
+html[data-theme='soleil'] .question-timer:not(.is-low) div { background: var(--g); }
 .game-octo { position: absolute; z-index: 3; top: -25px; left: 12px; display: block; width: 48px; height: 48px; margin: 0; }
 
 .question-area {
