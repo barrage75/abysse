@@ -25,6 +25,7 @@ import {
 import {
   applyZenSkip,
   nextZenQuestion,
+  updateZenWrongAttemptCycle,
   validateZenConfig,
   zenComboKey,
   zenAttemptStatus,
@@ -629,7 +630,12 @@ function App() {
     setAnswer(value)
     if (!session || session.mode !== 'Chrono libre' || finalizedRef.current) return
     const status = zenAttemptStatus(value, session.question.answer)
-    if (status === 'pending') wrongCurrentRef.current = ''
+    const wrongAttemptCycle = updateZenWrongAttemptCycle(
+      wrongCurrentRef.current,
+      status,
+      session.questionNumber,
+    )
+    wrongCurrentRef.current = wrongAttemptCycle.key
     if (status === 'correct') {
       clearWrongClearTimeout()
       const now = Date.now()
@@ -667,31 +673,27 @@ function App() {
       wrongCurrentRef.current = ''
       return
     }
-    if (status === 'wrong') {
-      const attempt = `${session.questionNumber}:${value}`
-      if (wrongCurrentRef.current !== attempt) {
-        wrongCurrentRef.current = attempt
-        setSession({
-          ...session,
-          zenWrongAttempts: session.zenWrongAttempts + 1,
-          zenWrongAttemptsOnQuestion: session.zenWrongAttemptsOnQuestion + 1,
-          zenLastWrongAttempt: value,
-          streak: 0,
-          missed: recordMissed(session.missed, {
-            text: session.question.text,
-            answer: session.question.answer,
-            given: value,
-            reason: 'wrong',
-          }),
-        })
-        triggerFx('wrong')
-        clearWrongClearTimeout()
-        wrongClearTimeoutRef.current = window.setTimeout(() => {
-          wrongClearTimeoutRef.current = null
-          setAnswer('')
-          wrongCurrentRef.current = ''
-        }, 350)
-      }
+    if (status === 'wrong' && wrongAttemptCycle.countWrong) {
+      setSession({
+        ...session,
+        zenWrongAttempts: session.zenWrongAttempts + 1,
+        zenWrongAttemptsOnQuestion: session.zenWrongAttemptsOnQuestion + 1,
+        zenLastWrongAttempt: value,
+        streak: 0,
+        missed: recordMissed(session.missed, {
+          text: session.question.text,
+          answer: session.question.answer,
+          given: value,
+          reason: 'wrong',
+        }),
+      })
+      triggerFx('wrong')
+      clearWrongClearTimeout()
+      wrongClearTimeoutRef.current = window.setTimeout(() => {
+        wrongClearTimeoutRef.current = null
+        setAnswer('')
+        wrongCurrentRef.current = ''
+      }, 350)
     }
   }
 

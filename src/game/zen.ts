@@ -48,6 +48,16 @@ export function zenAttemptStatus(value: string, answer: number): ZenAttemptStatu
   return value.length >= String(answer).length ? 'wrong' : 'pending'
 }
 
+export function updateZenWrongAttemptCycle(
+  currentKey: string,
+  status: ZenAttemptStatus,
+  questionNumber: number,
+): { key: string; countWrong: boolean } {
+  if (status !== 'wrong') return { key: '', countWrong: false }
+  const key = String(questionNumber)
+  return { key, countWrong: currentKey !== key }
+}
+
 function generateZenCandidate(rng: RandomSource, selected: Operation): Question {
   if (selected === '-') {
     const first = Math.floor(rng() * 99) + 2

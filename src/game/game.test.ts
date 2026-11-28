@@ -19,6 +19,7 @@ import {
   applyZenSkip,
   generateZenQuestion,
   nextZenQuestion,
+  updateZenWrongAttemptCycle,
   validateZenConfig,
   zenAttemptStatus,
   ZEN_SKIP_PENALTY_MS,
@@ -167,6 +168,24 @@ describe('Chrono libre', () => {
     expect(zenAttemptStatus('9999', 3)).toBe('wrong')
     expect(zenAttemptStatus('3', 3)).toBe('correct')
     expect(zenAttemptStatus('03', 3)).toBe('correct')
+  })
+
+  it('counts one wrong attempt per input cycle', () => {
+    const countWrongAttempts = (values: string[]) => {
+      let key = ''
+      let count = 0
+      for (const value of values) {
+        const status = zenAttemptStatus(value, 17)
+        const cycle = updateZenWrongAttemptCycle(key, status, 1)
+        key = cycle.key
+        if (cycle.countWrong) count += 1
+      }
+      return count
+    }
+
+    expect(countWrongAttempts(['19', '199'])).toBe(1)
+    expect(countWrongAttempts(['19', '', '18'])).toBe(2)
+    expect(countWrongAttempts(['19', '1', '18'])).toBe(2)
   })
 
   it('uses time attack operand ranges and exact inverse division', () => {
