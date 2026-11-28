@@ -128,6 +128,7 @@ export function Accueil({
         return
       }
       if (input === answerInputRef.current || submissionLockedRef.current) return
+      if (event.ctrlKey || event.metaKey || event.altKey) return
       if (/^\d$/.test(event.key)) {
         event.preventDefault()
         setWarmupAnswer((current) => `${current}${event.key}`)
