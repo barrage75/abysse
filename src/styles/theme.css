@@ -376,7 +376,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .warmup-streak { min-height: 17px; margin: 3px 0 6px; color: var(--mut); font-size: 12px; font-weight: 800; text-align: right; }
 .warmup-question { margin: 3px 0 12px; color: var(--ct); font-size: clamp(56px, 14vw, 64px); font-weight: 800; line-height: 1; white-space: nowrap; }
 .warmup-question span { color: var(--mut); }
-.warmup-answer { margin-top: 0; }
+.warmup-answer { margin: 0; }
 .warmup-feedback { min-height: 23px; margin: 5px 0 0; color: var(--ct); font-size: 17px; font-weight: 800; line-height: 1.2; }
 .warmup-card.is-wrong { animation: wrong-card .42s ease-in-out; }
 .home-side { display: grid; align-content: start; gap: 10px; }

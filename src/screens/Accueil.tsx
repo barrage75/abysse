@@ -161,18 +161,30 @@ export function Accueil({
             {warmupQuestion.text} <span>=</span>
           </h2>
           <label className="visually-hidden" htmlFor="warmup-answer">{t.game.answerLabel}</label>
-          <input
-            id="warmup-answer"
-            ref={answerInputRef}
-            className="zen-answer-input warmup-answer"
-            value={warmupAnswer}
-            onChange={(event) => setWarmupAnswer(event.target.value.replace(/\D/g, ''))}
-            inputMode={isTouch ? 'none' : 'numeric'}
-            autoComplete="off"
-            aria-describedby="warmup-feedback"
-            placeholder="?"
-            disabled={warmupWrong}
-          />
+          <div className="answer-form warmup-answer-form">
+            <input
+              id="warmup-answer"
+              ref={answerInputRef}
+              className="zen-answer-input warmup-answer"
+              value={warmupAnswer}
+              onChange={(event) => setWarmupAnswer(event.target.value.replace(/\D/g, ''))}
+              inputMode={isTouch ? 'none' : 'numeric'}
+              autoComplete="off"
+              aria-describedby="warmup-feedback"
+              placeholder="?"
+              disabled={warmupWrong}
+            />
+            {!isTouch && (
+              <button
+                className="button button-primary"
+                type="button"
+                onClick={submitWarmup}
+                disabled={warmupWrong}
+              >
+                {t.game.submit}
+              </button>
+            )}
+          </div>
           <p id="warmup-feedback" className="warmup-feedback" role="status" aria-live="polite">
             {warmupWrong ? `= ${warmupQuestion.answer}` : ''}
           </p>
