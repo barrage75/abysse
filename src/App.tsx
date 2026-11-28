@@ -893,7 +893,7 @@ function App() {
           onBack={returnHome}
         />
       )}
-      {showZenSetup && <ZenSetup onStart={startZen} onBack={returnHome} />}
+      {showZenSetup && <ZenSetup onStart={startZen} onBack={returnHome} bestScores={storedData.bestScores} />}
       {screen === 'game' && session?.mode === 'Chrono libre' && (
         <ZenGame
           session={session}
