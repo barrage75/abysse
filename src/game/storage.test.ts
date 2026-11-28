@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyGameData, readGameData, saveGameRecord, writeGameData, type GameRecord, type StorageLike } from './storage'
-import type { QuestionLogEntry } from './log'
+import { MAX_LOG_ENTRIES, type QuestionLogEntry } from './log'
 
 function memoryStorage(initial: string | null = null): StorageLike & { value: string | null } {
   return {
@@ -51,6 +51,7 @@ describe('game log storage', () => {
           { text: '', answer: 3, result: 'wrong' },
           { text: '2 + 2', answer: 4, result: 'unknown' },
           { text: '3 + 3', answer: 6, result: 'correct', seconds: -1 },
+          { text: '4 + 4', answer: 8, result: 'correct', n: 0 },
         ] as QuestionLogEntry[],
       })],
     }))
@@ -60,6 +61,25 @@ describe('game log storage', () => {
     expect(data.history).toHaveLength(1)
     expect(data.history[0].score).toBe(150)
     expect(data.history[0].log).toEqual([correctEntry])
+  })
+
+  it('keeps the newest 200 entries when normalizing a saved log', () => {
+    const log = Array.from({ length: MAX_LOG_ENTRIES + 1 }, (_, index) => ({
+      text: `question ${index + 1}`,
+      answer: index + 1,
+      result: 'correct' as const,
+      n: index + 1,
+    }))
+    const storage = memoryStorage(JSON.stringify({
+      ...emptyGameData(),
+      history: [gameRecord({ log })],
+    }))
+
+    const savedLog = readGameData(storage).history[0].log ?? []
+
+    expect(savedLog).toHaveLength(MAX_LOG_ENTRIES)
+    expect(savedLog[0]).toEqual(log[1])
+    expect(savedLog[MAX_LOG_ENTRIES - 1]).toEqual(log[MAX_LOG_ENTRIES])
   })
 
   it('keeps legacy records without a log loadable', () => {

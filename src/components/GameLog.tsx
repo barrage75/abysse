@@ -21,7 +21,7 @@ export function GameLog({ entries }: GameLogProps) {
   const counts = countLog(entries)
   const matchingEntries = new Set(filterLog(entries, filter))
   const visibleEntries = entries
-    .map((entry, index) => ({ entry, number: index + 1 }))
+    .map((entry, index) => ({ entry, number: entry.n ?? index + 1 }))
     .filter(({ entry }) => matchingEntries.has(entry))
   const formatSeconds = (seconds: number) => new Intl.NumberFormat(localeFor(lang), {
     minimumFractionDigits: 1,

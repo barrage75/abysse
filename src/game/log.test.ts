@@ -11,18 +11,15 @@ import {
 } from './log'
 
 describe('question log', () => {
-  it('keeps the earliest entries when the log cap is reached', () => {
-    const log = Array.from({ length: MAX_LOG_ENTRIES }, (_, index) => ({
-      text: `question ${index}`,
-      answer: index,
-      result: 'correct' as const,
-    }))
+  it('keeps the newest entries and their original question numbers at the cap', () => {
+    let log: QuestionLogEntry[] = []
+    for (let n = 1; n <= MAX_LOG_ENTRIES + 1; n += 1) {
+      log = appendLog(log, { text: `question ${n}`, answer: n, result: 'correct' })
+    }
 
-    const appended = appendLog(log, { text: 'newest', answer: 1, result: 'wrong' })
-
-    expect(appended).toHaveLength(MAX_LOG_ENTRIES)
-    expect(appended[0].text).toBe('question 0')
-    expect(appended[MAX_LOG_ENTRIES - 1].text).toBe(`question ${MAX_LOG_ENTRIES - 1}`)
+    expect(log).toHaveLength(MAX_LOG_ENTRIES)
+    expect(log[0].n).toBe(2)
+    expect(log[MAX_LOG_ENTRIES - 1]).toMatchObject({ n: 201, text: 'question 201' })
   })
 
   it('counts and filters correct, wrong, and unanswered results', () => {

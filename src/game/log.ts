@@ -9,6 +9,7 @@ export interface QuestionLogEntry {
   given?: string
   seconds?: number
   attempts?: number
+  n?: number
 }
 
 export type LogFilter = 'all' | 'correct' | 'wrong' | 'unanswered'
@@ -16,8 +17,8 @@ export type LogFilter = 'all' | 'correct' | 'wrong' | 'unanswered'
 export const MAX_LOG_ENTRIES = 200
 
 export function appendLog(log: QuestionLogEntry[], entry: QuestionLogEntry): QuestionLogEntry[] {
-  if (log.length >= MAX_LOG_ENTRIES) return log.slice(0, MAX_LOG_ENTRIES)
-  return [...log, entry]
+  const n = (log[log.length - 1]?.n ?? log.length) + 1
+  return [...log, { ...entry, n }].slice(-MAX_LOG_ENTRIES)
 }
 
 export function countLog(log: QuestionLogEntry[]): Record<LogFilter, number> {

@@ -115,12 +115,13 @@ function isQuestionLogEntry(value: unknown): value is QuestionLogEntry {
     && (value.given === undefined || typeof value.given === 'string')
     && (value.seconds === undefined || (isFiniteNumber(value.seconds) && value.seconds >= 0))
     && (value.attempts === undefined || (isFiniteNumber(value.attempts) && Number.isInteger(value.attempts) && value.attempts >= 0))
+    && (value.n === undefined || (isFiniteNumber(value.n) && Number.isInteger(value.n) && value.n > 0))
 }
 
 function normalizeGameRecord(record: GameRecord): GameRecord {
   const { log, ...withoutLog } = record
   if (!Array.isArray(log)) return withoutLog
-  return { ...withoutLog, log: log.filter(isQuestionLogEntry).slice(0, MAX_LOG_ENTRIES) }
+  return { ...withoutLog, log: log.filter(isQuestionLogEntry).slice(-MAX_LOG_ENTRIES) }
 }
 
 function retainRecentLogs(history: GameRecord[]): GameRecord[] {
