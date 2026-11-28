@@ -3,7 +3,7 @@ import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
 import { Octo } from '../components/Octo'
 import { ACHIEVEMENTS } from '../game/achievements'
 import { isInteractiveTarget } from '../game/keyboard'
-import { nextWarmup, checkWarmup } from '../game/warmup'
+import { nextWarmup, checkWarmup, sanitizeWarmupInput } from '../game/warmup'
 import { playSound } from '../game/sound'
 import type { RandomSource } from '../game/rng'
 import type { StoredGameData } from '../game/storage'
@@ -131,6 +131,9 @@ export function Accueil({
       if (/^\d$/.test(event.key)) {
         event.preventDefault()
         setWarmupAnswer((current) => `${current}${event.key}`)
+      } else if (event.key === '-' || event.code === 'NumpadSubtract') {
+        event.preventDefault()
+        setWarmupAnswer((current) => current === '' ? '-' : current)
       } else if (event.key === 'Backspace') {
         event.preventDefault()
         setWarmupAnswer((current) => current.slice(0, -1))
@@ -167,7 +170,7 @@ export function Accueil({
               ref={answerInputRef}
               className="zen-answer-input warmup-answer"
               value={warmupAnswer}
-              onChange={(event) => setWarmupAnswer(event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => setWarmupAnswer(sanitizeWarmupInput(event.target.value))}
               inputMode={isTouch ? 'none' : 'numeric'}
               autoComplete="off"
               aria-describedby="warmup-feedback"

@@ -13,3 +13,8 @@ export function nextWarmup(rng: RandomSource, previousText?: string): Question {
 export function checkWarmup(value: string, question: Question): boolean {
   return value !== '' && Number(value) === question.answer
 }
+
+export function sanitizeWarmupInput(value: string): string {
+  const digits = value.replace(/\D/g, '')
+  return value.startsWith('-') ? `-${digits}` : digits
+}

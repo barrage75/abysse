@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { mulberry32 } from './rng'
-import { checkWarmup, nextWarmup } from './warmup'
+import { checkWarmup, nextWarmup, sanitizeWarmupInput } from './warmup'
 
 describe('home warm-up', () => {
   it('does not repeat the previous question over 50 seeded draws', () => {
@@ -27,5 +27,14 @@ describe('home warm-up', () => {
     expect(checkWarmup('42', question)).toBe(true)
     expect(checkWarmup('41', question)).toBe(false)
     expect(checkWarmup('', question)).toBe(false)
+  })
+
+  it.each([
+    ['-5', '-5'],
+    ['5-', '5'],
+    ['--5', '-5'],
+    ['a1b2', '12'],
+  ])('sanitizes %s as %s', (value, expected) => {
+    expect(sanitizeWarmupInput(value)).toBe(expected)
   })
 })
