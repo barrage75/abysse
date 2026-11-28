@@ -15,6 +15,20 @@ const fr = {
     enableSound: 'Activer le son',
     disableMotion: 'Couper les animations',
     enableMotion: 'Activer les animations',
+    changeTheme: 'Changer de thème',
+  },
+  theme: {
+    title: 'Thème du jeu',
+    hint: 'Change toutes les couleurs. Ton choix est gardé sur cet appareil.',
+    close: 'Fermer',
+    names: {
+      lagon: 'Lagon',
+      corail: 'Corail',
+      nuit: 'Nuit',
+      algue: 'Algue',
+      bonbon: 'Bonbon',
+      soleil: 'Soleil',
+    },
   },
   modes: {
     levels: 'Niveaux',

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
-import octo from '../assets/octo-chalk.webp'
-import octoSad from '../assets/octo-sad.webp'
+import { Octo } from '../components/Octo'
 import { useLang } from '../i18n/useLang'
 import { levelName, localeFor, modeLabel } from '../i18n/helpers'
 import type { Fx, GameSession } from './types'
@@ -63,7 +62,7 @@ export function NiveauxGame({
       <header className="game-header">
         <button className="back-button" onClick={onRequestQuit}>{t.game.quit}</button>
         <span className="game-mode-label">{modeLabel(session.mode, t)}</span>
-        <div className="lives" aria-label={t.game.lives(session.lives)}>
+        <div className="lives" role="img" aria-label={t.game.lives(session.lives)}>
           {Array.from({ length: 3 }, (_, index) => <span key={index} className={index < session.lives ? 'life is-live' : 'life'} />)}
         </div>
       </header>
@@ -79,11 +78,18 @@ export function NiveauxGame({
         </div>
         <div><span>{t.game.streak}</span><strong>{session.streak}</strong></div>
       </section>
-      <div className={`question-timer${isLow ? ' is-low' : ''}`} aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}>
+      <div
+        className={`question-timer${isLow ? ' is-low' : ''}`}
+        role="progressbar"
+        aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}
+        aria-valuemin={0}
+        aria-valuemax={session.timeLimitSeconds}
+        aria-valuenow={Math.ceil(remainingSeconds)}
+      >
         <div style={{ width: `${progress}%` }} />
       </div>
 
-      <img className="game-octo" data-mood={mood} src={mood === 'sad' ? octoSad : octo} alt="" />
+      <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
       <section className={`question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
         <p className="question-count">{isDaily
           ? t.game.dailyQuestion(session.questionNumber, 20)
@@ -130,11 +136,13 @@ export function NiveauxGame({
       </section>
       {!isDaily && <p className="game-hint">{t.game.pointsSpeed}</p>}
       {quitConfirm && (
-        <div className="quit-confirm" role="alertdialog" aria-modal="true">
-          <p>{t.game.quitQuestion}{isDaily ? t.game.dailyQuitNote : ''}</p>
-          <div>
-            <button className="button button-primary" onClick={onQuit}>{t.game.confirmQuit}</button>
-            <button className="button button-secondary" onClick={onContinue}>{t.game.continue}</button>
+        <div className="quit-overlay">
+          <div className="quit-confirm" role="alertdialog" aria-modal="true" aria-labelledby="quit-question">
+            <p id="quit-question">{t.game.quitQuestion}{isDaily ? t.game.dailyQuitNote : ''}</p>
+            <div>
+              <button className="button button-primary" onClick={onQuit}>{t.game.confirmQuit}</button>
+              <button className="button button-secondary" onClick={onContinue}>{t.game.continue}</button>
+            </div>
           </div>
         </div>
       )}

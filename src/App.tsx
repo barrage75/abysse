@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AchievementToast } from './components/AchievementToast'
-import { AmbientBubbles } from './components/AmbientBubbles'
 import { TopControls } from './components/TopControls'
-import { Decor } from './components/Decor'
 import { evaluate } from './game/achievements'
 import { DAILY_QUESTION_COUNT, dailyQuestion } from './game/daily'
 import { getLevel } from './game/levels'
@@ -39,8 +37,6 @@ import { DailySetup, NiveauxSetup, ZenSetup } from './screens/Setup'
 import { Countdown } from './screens/Countdown'
 import type { Fx, FxKind, GameResult, GameSession } from './screens/types'
 import './styles/theme.css'
-import './styles/chalk.css'
-import './styles/home.css'
 
 type Screen = 'home' | 'levels-setup' | 'daily-setup' | 'zen-setup' | 'countdown' | 'game' | 'results' | 'records' | 'achievements'
 type LastSetup =
@@ -811,9 +807,7 @@ function App() {
 
   return (
     <>
-      <AmbientBubbles group="back" />
-      <Decor />
-      <AmbientBubbles group="front" />
+      <div className="waves" aria-hidden="true" />
       {screen !== 'game' && (
         <TopControls
           soundOn={soundOn}
@@ -822,6 +816,7 @@ function App() {
           onToggleMotion={toggleMotion}
         />
       )}
+      <div className="app-view">
       {screen === 'countdown' && countdownValue !== null && (
         <Countdown value={countdownValue} onQuit={cancelCountdown} />
       )}
@@ -899,6 +894,7 @@ function App() {
       )}
       {screen === 'records' && <Records data={storedData} onBack={returnHome} />}
       {screen === 'achievements' && <Succes data={storedData} onBack={returnHome} />}
+      </div>
       <AchievementToast achievements={toast} onDismiss={dismissToast} />
     </>
   )

@@ -1,10 +1,10 @@
-# ABYSSE — le labo de calcul mental
+# ABYSSE — Arcade Pop
 
 <p align="center">
   <img src="docs/media/hero.png" alt="Accueil d’ABYSSE" width="900">
 </p>
 
-Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos parties et records restent dans votre navigateur.
+Un jeu de calcul mental au style Arcade Pop, à jouer seul en français ou en anglais. Choisissez parmi six thèmes de couleur ; vos parties, records et préférences restent dans votre navigateur.
 
 ## Aperçu
 
@@ -55,6 +55,8 @@ Un jeu de calcul mental immersif, à jouer seul, en français ou en anglais. Vos
 ## Fonctionnalités
 
 - Interface en français et en anglais, avec langue mémorisée dans le navigateur.
+- Nouveau design Arcade Pop : couleurs franches, cartes à contours épais et mascotte poulpe en SVG.
+- Six thèmes — Lagon, Corail, Nuit, Algue, Bonbon et Soleil — enregistrés sur cet appareil.
 - Sons synthétisés activables ou non, compte à rebours avant chaque partie et badges de combo.
 - Succès, records et historique conservés localement ; partage du résultat quotidien.
 - Pensé pour jouer sans compte ni service distant : aucune API de jeu, progression stockée dans le navigateur.
@@ -79,26 +81,26 @@ npm test
 ```text
 src/
 ├── App.tsx       # navigation, état des parties et compte à rebours
-├── assets/       # illustrations et décors
-├── components/   # contrôles et composants réutilisables
+├── components/   # contrôles, mascotte SVG et composants réutilisables
 ├── game/         # règles, génération, scores, succès et stockage local
 ├── i18n/         # dictionnaires français/anglais et contexte de langue
 ├── screens/      # accueil, réglages, parties et résultats
-└── styles/       # thème, décor et animations
+└── styles/       # thèmes, mise en page et animations
 ```
 
 ## Technologies
 
-React · TypeScript · Vite · Vitest · Web Audio API · Fredoka
+React · TypeScript · Vite · Vitest · Web Audio API · Baloo 2
 
 ## English
 
-**ABYSSE — the mental math lab** is a solo mental-math game with local records and no remote game service.
+**ABYSSE — Arcade Pop** is a solo mental-math game with local records and no remote game service. Its bold colors, thick card outlines, and SVG octopus can be customized with six saved themes.
 
 - **Levels:** six levels, three lives, and speed-based scoring.
 - **Time Attack:** choose operations and a 30–180 second timer; skipping costs 3 seconds and the question returns a few questions later.
 - **Daily Challenge:** the same 20-question sequence for everyone each day; one completed run counts.
 - Animations are on by default and can be turned off with the motion button.
+- Choose Lagon, Corail, Nuit, Algue, Bonbon, or Soleil; the selected theme is saved on this device.
 - Points pop up after each correct answer, the quit dialog pauses the game, and the results screen lists the questions to review.
 
 Run locally with `npm install` and `npm run dev`; build with `npm run build` and test with `npm test`.

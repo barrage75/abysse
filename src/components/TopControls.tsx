@@ -1,3 +1,5 @@
+import { useCallback, useRef, useState } from 'react'
+import { ThemePicker } from './ThemePicker'
 import { useLang } from '../i18n/useLang'
 
 function SoundIcon({ enabled }: { enabled: boolean }) {
@@ -48,6 +50,28 @@ function MotionIcon({ enabled }: { enabled: boolean }) {
   )
 }
 
+function PaletteIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3a9 9 0 1 0 0 18h1.2a1.8 1.8 0 0 0 1.5-2.8 1.7 1.7 0 0 1 1.4-2.7H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z" />
+      <circle cx="7.5" cy="11" r="1" fill="currentColor" />
+      <circle cx="10" cy="7" r="1" fill="currentColor" />
+      <circle cx="15" cy="7.5" r="1" fill="currentColor" />
+      <circle cx="17" cy="11" r="1" fill="currentColor" />
+    </svg>
+  )
+}
+
 interface TopControlsProps {
   soundOn: boolean
   onToggleSound: () => void
@@ -57,6 +81,13 @@ interface TopControlsProps {
 
 export function TopControls({ soundOn, onToggleSound, motionOn, onToggleMotion }: TopControlsProps) {
   const { lang, setLang, t } = useLang()
+  const [themeOpen, setThemeOpen] = useState(false)
+  const themeButtonRef = useRef<HTMLButtonElement>(null)
+  const closeTheme = useCallback(() => {
+    setThemeOpen(false)
+    window.requestAnimationFrame(() => themeButtonRef.current?.focus())
+  }, [])
+
   return (
     <div className="top-controls">
       <button
@@ -87,6 +118,19 @@ export function TopControls({ soundOn, onToggleSound, motionOn, onToggleMotion }
       >
         <MotionIcon enabled={motionOn} />
       </button>
+      <button
+        ref={themeButtonRef}
+        type="button"
+        className="icon-toggle"
+        aria-label={t.controls.changeTheme}
+        aria-haspopup="dialog"
+        aria-expanded={themeOpen}
+        title={t.controls.changeTheme}
+        onClick={() => setThemeOpen(true)}
+      >
+        <PaletteIcon />
+      </button>
+      {themeOpen && <ThemePicker onClose={closeTheme} />}
     </div>
   )
 }

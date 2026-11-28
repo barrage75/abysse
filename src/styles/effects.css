@@ -1,278 +1,90 @@
-.ambient-bubbles {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.logo-badge { animation: logo-pop .42s cubic-bezier(.2, 1.5, .55, 1) both; }
+.octo { transform-origin: 50% 55%; animation: octo-bob 3.2s ease-in-out infinite; }
+.question-area[data-fx='wrong'], .question-area[data-fx='timeout'] { animation: wrong-card .42s ease-in-out; }
+.question-area[data-fx='correct'] { animation: correct-card .32s ease-out; }
+.points-pop { animation: points-pop .9s ease-out forwards; }
+.question-timer.is-low div { animation: timer-pulse 1s ease-in-out infinite alternate; }
+.countdown-overlay span { animation: countdown-pop .36s cubic-bezier(.2, 1.5, .55, 1); }
+.level-up-banner { animation: level-up-pop .4s cubic-bezier(.2, 1.5, .55, 1); }
+.achievement-toast { animation: toast-in .28s ease-out both; }
+.fx-layer[data-kind='correct'] { animation: fx-correct .3s ease-out; }
+.fx-layer[data-kind='wrong'], .fx-layer[data-kind='timeout'] { animation: fx-wrong .38s ease-out; }
+.fx-layer[data-kind='levelup'] { animation: fx-levelup .4s ease-out; }
+
+@keyframes logo-pop {
+  from { opacity: 0; transform: translateY(-8px) rotate(-7deg) scale(.9); }
+  to { opacity: 1; transform: translateY(0) rotate(-3deg) scale(1); }
 }
 
-.ambient-bubbles--back { opacity: 0.7; }
-.ambient-bubbles--front { opacity: 0.5; }
-
-.ambient-bubble {
-  position: absolute;
-  inset: 0 0 var(--negative-period);
-  background-image: var(--bubble-image);
-  background-size: var(--tile-width) var(--tile-height);
-  background-position: var(--start-x) calc(-20vh + var(--start-y));
-  background-repeat: repeat;
-  animation: ambient-rise 22s linear infinite;
-  will-change: transform;
+@keyframes octo-bob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -4px; }
 }
 
-.ambient-bubbles--front .ambient-bubble { animation-duration: 34s; }
-
-.ambient-bubble--back-1 {
-  --tile-width: 260px;
-  --tile-height: 420px;
-  --negative-period: -420px;
-  --start-x: 20px;
-  --start-y: 0px;
-  --rise: translate3d(0, -420px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.55) 0 2px, rgba(160, 240, 255, 0.25) 3px 6px, transparent 7px);
+@keyframes wrong-card {
+  0%, 100% { transform: translateX(0); border-color: var(--ink); }
+  20%, 60% { transform: translateX(-5px); border-color: var(--h); }
+  40%, 80% { transform: translateX(5px); border-color: var(--h); }
 }
 
-.ambient-bubble--back-2 {
-  --tile-width: 180px;
-  --tile-height: 300px;
-  --negative-period: -300px;
-  --start-x: 120px;
-  --start-y: 60px;
-  --rise: translate3d(0, -300px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5) 0 1px, rgba(160, 240, 255, 0.2) 2px 4px, transparent 5px);
+@keyframes correct-card {
+  0% { box-shadow: 0 5px 0 var(--ink); }
+  50% { box-shadow: 0 5px 0 var(--g), 0 0 0 3px var(--g); }
+  100% { box-shadow: 0 5px 0 var(--ink); }
 }
 
-.ambient-bubble--back-3 {
-  --tile-width: 420px;
-  --tile-height: 620px;
-  --negative-period: -620px;
-  --start-x: 300px;
-  --start-y: 200px;
-  --rise: translate3d(0, -620px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45) 0 3px, rgba(160, 240, 255, 0.18) 4px 9px, transparent 10px);
+@keyframes points-pop {
+  from { opacity: 0; translate: 0 7px; }
+  15%, 75% { opacity: 1; }
+  to { opacity: 0; translate: 0 -10px; }
 }
 
-.ambient-bubble--front-1 {
-  --tile-width: 340px;
-  --tile-height: 520px;
-  --negative-period: -520px;
-  --start-x: 180px;
-  --start-y: 100px;
-  --rise: translate3d(0, -520px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.55) 0 2px, rgba(160, 240, 255, 0.25) 3px 6px, transparent 7px);
+@keyframes timer-pulse {
+  to { opacity: .72; }
 }
 
-.ambient-bubble--front-2 {
-  --tile-width: 220px;
-  --tile-height: 380px;
-  --negative-period: -380px;
-  --start-x: 40px;
-  --start-y: 300px;
-  --rise: translate3d(0, -380px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.5) 0 1px, rgba(160, 240, 255, 0.2) 2px 4px, transparent 5px);
+@keyframes countdown-pop {
+  from { opacity: 0; scale: .7; }
+  to { opacity: 1; scale: 1; }
 }
 
-.ambient-bubble--front-3 {
-  --tile-width: 520px;
-  --tile-height: 760px;
-  --negative-period: -760px;
-  --start-x: 60px;
-  --start-y: 500px;
-  --rise: translate3d(0, -760px, 0);
-  --bubble-image: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.45) 0 3px, rgba(160, 240, 255, 0.18) 4px 9px, transparent 10px);
+@keyframes level-up-pop {
+  from { opacity: 0; scale: .92; }
+  to { opacity: 1; scale: 1; }
 }
 
-@keyframes ambient-rise { to { transform: var(--rise); } }
-
-#root > main { position: relative; z-index: 1; }
-
-/* Accueil : fioles qui flottent */
-.flask-shelf .flask {
-  animation: float 5s ease-in-out infinite;
-  animation-composition: add;
-}
-.flask-shelf .flask:nth-child(2) { animation-delay: -1s; }
-.flask-shelf .flask:nth-child(3) { animation-delay: -2.2s; }
-.flask-shelf .flask:nth-child(4) { animation-delay: -3.1s; }
-.flask-shelf .flask:nth-child(5) { animation-delay: -4s; }
-.flask-shelf .flask:hover:not(:disabled) { animation-play-state: paused; }
-
-@keyframes float {
-  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-  50% { transform: translate3d(0, -7px, 0) rotate(1deg); }
+@keyframes toast-in {
+  from { opacity: 0; translate: 0 10px; }
+  to { opacity: 1; translate: 0 0; }
 }
 
-.home-panel { animation: panel-in 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.2) both; }
-@keyframes panel-in { from { transform: translateY(30px) scale(0.97); } }
-
-/* Nouvelle question : elle remonte comme une bulle */
-.question-text {
-  animation: question-in 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
-  will-change: transform, opacity;
-}
-@keyframes question-in {
-  from { transform: translateY(18px) scale(0.92) rotate(-1deg); }
+@keyframes fx-correct {
+  from { background: color-mix(in srgb, var(--g) 24%, transparent); }
+  to { background: transparent; }
 }
 
-.question-area[data-fx='wrong'], .question-area[data-fx='timeout'] { animation: shake 0.4s ease-in-out; }
-@keyframes shake {
-  20% { transform: translateX(-10px); }
-  40% { transform: translateX(9px); }
-  60% { transform: translateX(-6px); }
-  80% { transform: translateX(4px); }
+@keyframes fx-wrong {
+  0%, 100% { background: transparent; }
+  40% { background: color-mix(in srgb, var(--h) 18%, transparent); }
 }
 
-/* Couche d'effets plein écran */
-.fx-layer {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
+@keyframes fx-levelup {
+  from { background: color-mix(in srgb, var(--a) 28%, transparent); }
+  to { background: transparent; }
 }
 
-/* Bonne réponse : éclat de bulles vertes */
-.fx-layer[data-kind='correct']::before,
-.fx-layer[data-kind='levelup']::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 42%;
-  width: 360px;
-  height: 360px;
-  margin: -180px 0 0 -180px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(157, 255, 58, 0.9) 0 7px, transparent 8px),
-    radial-gradient(circle at 78% 22%, rgba(94, 231, 255, 0.9) 0 9px, transparent 10px),
-    radial-gradient(circle at 85% 70%, rgba(157, 255, 58, 0.85) 0 6px, transparent 7px),
-    radial-gradient(circle at 30% 82%, rgba(94, 231, 255, 0.85) 0 8px, transparent 9px),
-    radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.9) 0 5px, transparent 6px),
-    radial-gradient(circle at 8% 60%, rgba(255, 255, 255, 0.8) 0 4px, transparent 5px),
-    radial-gradient(circle at 60% 92%, rgba(157, 255, 58, 0.8) 0 5px, transparent 6px),
-    radial-gradient(circle at 95% 45%, rgba(255, 255, 255, 0.8) 0 4px, transparent 5px);
-  animation: burst 0.7s ease-out both;
+html[data-motion='off'] * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
 
-.fx-layer[data-kind='correct']::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 42%, rgba(157, 255, 58, 0.22), transparent 45%);
-  animation: fade 0.6s ease-out both;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
-
-@keyframes burst {
-  from { transform: scale(0.3); opacity: 1; }
-  to { transform: scale(1.6) translateY(-40px); opacity: 0; }
-}
-@keyframes fade { to { opacity: 0; } }
-
-/* Erreur : nuage d'encre de la pieuvre */
-.fx-layer[data-kind='wrong']::before,
-.fx-layer[data-kind='timeout']::before {
-  content: '';
-  position: absolute;
-  right: -10%;
-  bottom: -10%;
-  width: 70vmax;
-  height: 70vmax;
-  background:
-    radial-gradient(circle at 60% 60%, rgba(40, 10, 70, 0.75), transparent 40%),
-    radial-gradient(circle at 35% 70%, rgba(70, 20, 110, 0.6), transparent 30%),
-    radial-gradient(circle at 70% 30%, rgba(50, 10, 90, 0.55), transparent 28%);
-  filter: blur(8px);
-  animation: ink 1s ease-out both;
-  will-change: transform;
-}
-.fx-layer[data-kind='timeout']::before { left: -10%; right: auto; }
-
-@keyframes ink {
-  from { transform: scale(0.2); opacity: 0.95; }
-  40% { opacity: 0.85; }
-  to { transform: scale(1.3); opacity: 0; }
-}
-
-/* Niveau supérieur : colonne de lumière */
-.fx-layer[data-kind='levelup']::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(0deg, rgba(166, 107, 255, 0.45), rgba(255, 95, 180, 0.15) 40%, transparent 70%);
-  animation: rise-light 1.4s ease-out both;
-}
-@keyframes rise-light {
-  from { transform: translateY(60%); opacity: 0; }
-  40% { opacity: 1; }
-  to { transform: translateY(-30%); opacity: 0; }
-}
-
-/* Passer : courant d'eau */
-.fx-layer[data-kind='skip']::before {
-  content: '';
-  position: absolute;
-  top: 30%;
-  left: 0;
-  width: 100%;
-  height: 30%;
-  background: linear-gradient(90deg, transparent, rgba(94, 231, 255, 0.28), transparent);
-  animation: current 0.5s ease-in both;
-}
-@keyframes current { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
-
-/* La pieuvre qui réagit pendant la partie */
-.game-octo {
-  position: fixed;
-  right: clamp(8px, 3vw, 48px);
-  bottom: 8px;
-  z-index: 4;
-  width: clamp(110px, 14vw, 200px);
-  pointer-events: none;
-  filter: drop-shadow(0 0 18px rgba(166, 107, 255, 0.55));
-  animation: octo-idle 3.2s ease-in-out infinite;
-  will-change: transform;
-}
-.game-octo[data-mood='happy'] { animation: octo-happy 0.6s cubic-bezier(0.3, 1.6, 0.5, 1), octo-idle 3.2s ease-in-out 0.6s infinite; }
-.game-octo[data-mood='sad'] { animation: octo-sad 0.6s ease-in-out, octo-idle 3.2s ease-in-out 0.6s infinite; }
-
-@keyframes octo-idle { 50% { transform: translateY(-10px) rotate(2deg); } }
-@keyframes octo-happy {
-  40% { transform: translateY(-40px) scale(1.08) rotate(-4deg); }
-}
-@keyframes octo-sad {
-  25% { transform: rotate(-6deg) translateY(6px); }
-  75% { transform: rotate(5deg) translateY(6px); }
-}
-
-/* Fin de partie */
-.record-badge {
-  position: relative;
-  isolation: isolate;
-  will-change: transform;
-  box-shadow: none;
-  animation: badge 1.6s ease-in-out infinite;
-}
-.record-badge::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  box-shadow: 0 0 34px rgba(255, 211, 77, 0.95);
-  opacity: 0.65;
-  animation: badge-glow 1.6s ease-in-out infinite;
-  pointer-events: none;
-  will-change: opacity;
-}
-@keyframes badge {
-  50% { transform: scale(1.06); }
-}
-@keyframes badge-glow { 50% { opacity: 1; } }
-.result-page h1 { animation: question-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
-
-.setup-page, .list-page, .result-page { animation: panel-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
-
-@media (max-width: 860px) {
-  .game-octo { width: 92px; right: 4px; bottom: 4px; opacity: 0.95; }
-}
-
-html[data-motion='off'] .ambient-bubble { will-change: auto; }
-html[data-motion='off'] .fx-layer { display: none; }

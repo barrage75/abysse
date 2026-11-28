@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import octo from '../assets/octo.webp'
+import { Octo } from '../components/Octo'
 import { formatDailyShareText } from '../game/sharing'
 import { useLang } from '../i18n/useLang'
 import { localeFor, modeLabel } from '../i18n/helpers'
@@ -59,7 +59,7 @@ export function FinDePartie({ result, onReplay, onHome }: FinDePartieProps) {
   return (
     <main className="page-shell result-page">
       <button className="back-button" onClick={onHome}>{t.results.backHome}</button>
-      <img className="result-octo" src={octo} alt="" />
+      <Octo className="result-octo" mood="happy" />
       <p className="eyebrow">{t.results.headline(modeLabel(result.mode, t))}</p>
       <h1>{result.score.toLocaleString(localeFor(lang))}<span className="result-unit"> {t.results.points}</span></h1>
       {result.mode === 'Niveaux' && (

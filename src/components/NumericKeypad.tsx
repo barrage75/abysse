@@ -38,7 +38,7 @@ export function NumericKeypad({
   if (!isTouch) return null
 
   return (
-    <div className="keypad" aria-label={t.game.keypad}>
+    <div className="keypad" role="group" aria-label={t.game.keypad}>
       {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
         <button key={digit} type="button" disabled={disabled} onClick={() => onDigit(digit)}>{digit}</button>
       ))}

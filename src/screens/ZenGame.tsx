@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { NumericKeypad, useIsTouch } from '../components/NumericKeypad'
-import octo from '../assets/octo-chalk.webp'
-import octoSad from '../assets/octo-sad.webp'
+import { Octo } from '../components/Octo'
 import { useLang } from '../i18n/useLang'
 import { localeFor, modeLabel } from '../i18n/helpers'
 import type { Fx, GameSession } from './types'
@@ -60,14 +59,23 @@ export function ZenGame({
         <span className="game-mode-label">{modeLabel(session.mode, t)}</span>
         <strong className="global-timer">{t.records.duration(Math.ceil(remainingSeconds))}</strong>
       </header>
-      <div className={`question-timer${isLow ? ' is-low' : ''}`}><div style={{ width: `${progress}%` }} /></div>
+      <div
+        className={`question-timer${isLow ? ' is-low' : ''}`}
+        role="progressbar"
+        aria-label={t.game.secondsRemaining(Math.ceil(remainingSeconds))}
+        aria-valuemin={0}
+        aria-valuemax={session.duration ?? 60}
+        aria-valuenow={Math.ceil(remainingSeconds)}
+      >
+        <div style={{ width: `${progress}%` }} />
+      </div>
       <section className="zen-score-line">
         <span>{t.game.score} <strong>{session.score.toLocaleString(localeFor(lang))}</strong></span>
         <span>{t.game.personalBest(bestScore.toLocaleString(localeFor(lang)))}</span>
         <span>{session.operations?.join('  ')}</span>
         <button className="button button-secondary skip-button" disabled={quitConfirm} onClick={onSkip}>{t.game.skip}</button>
       </section>
-      <img className="game-octo" data-mood={mood} src={mood === 'sad' ? octoSad : octo} alt="" />
+      <Octo className="game-octo" mood={mood === 'sad' ? 'sad' : 'happy'} />
       <section className={`question-area zen-question-area${quitConfirm ? ' is-paused' : ''}`} data-fx={fx?.kind}>
         <p className="question-count">{t.game.question(session.questionNumber)}</p>
         {session.streak >= 3 && (
@@ -98,11 +106,13 @@ export function ZenGame({
         {fx?.kind === 'correct' && fx.points ? <span className="points-pop" key={fx.id} aria-hidden="true">+{fx.points}</span> : null}
       </section>
       {quitConfirm && (
-        <div className="quit-confirm" role="alertdialog" aria-modal="true">
-          <p>{t.game.quitQuestion}</p>
-          <div>
-            <button className="button button-primary" onClick={onQuit}>{t.game.confirmQuit}</button>
-            <button className="button button-secondary" onClick={onContinue}>{t.game.continue}</button>
+        <div className="quit-overlay">
+          <div className="quit-confirm" role="alertdialog" aria-modal="true" aria-labelledby="quit-question">
+            <p id="quit-question">{t.game.quitQuestion}</p>
+            <div>
+              <button className="button button-primary" onClick={onQuit}>{t.game.confirmQuit}</button>
+              <button className="button button-secondary" onClick={onContinue}>{t.game.continue}</button>
+            </div>
           </div>
         </div>
       )}

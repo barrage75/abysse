@@ -10,6 +10,20 @@ const en = {
     enableSound: 'Turn sound on',
     disableMotion: 'Turn animations off',
     enableMotion: 'Turn animations on',
+    changeTheme: 'Change theme',
+  },
+  theme: {
+    title: 'Game theme',
+    hint: 'Change all the colors. Your choice is saved on this device.',
+    close: 'Close',
+    names: {
+      lagon: 'Lagoon',
+      corail: 'Coral',
+      nuit: 'Night',
+      algue: 'Seaweed',
+      bonbon: 'Candy',
+      soleil: 'Sunset',
+    },
   },
   modes: {
     levels: 'Levels',
