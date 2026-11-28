@@ -360,6 +360,68 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .shortcut-card small { display: block; color: var(--mut); font-size: 12px; font-weight: 700; }
 .home-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin-top: 12px; }
 
+.home-layout { display: grid; gap: 14px; }
+.warmup-card {
+  position: relative;
+  min-width: 0;
+  padding: 15px 14px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 22px;
+  background: var(--card);
+  box-shadow: 0 5px 0 var(--ink);
+  color: var(--ct);
+  text-align: center;
+}
+.warmup-label { margin: 0; color: var(--mut); font-size: 13px; font-weight: 800; line-height: 1.15; }
+.warmup-streak { min-height: 17px; margin: 3px 0 6px; color: var(--mut); font-size: 12px; font-weight: 800; text-align: right; }
+.warmup-question { margin: 3px 0 12px; color: var(--ct); font-size: clamp(56px, 14vw, 64px); font-weight: 800; line-height: 1; white-space: nowrap; }
+.warmup-question span { color: var(--mut); }
+.warmup-answer { margin-top: 0; }
+.warmup-feedback { min-height: 23px; margin: 5px 0 0; color: var(--ct); font-size: 17px; font-weight: 800; line-height: 1.2; }
+.warmup-card.is-wrong { animation: wrong-card .42s ease-in-out; }
+.home-side { display: grid; align-content: start; gap: 10px; }
+.home-mode-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.home-mode-tile {
+  display: flex;
+  min-width: 0;
+  min-height: 84px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 5px 3px;
+  border: 3px solid var(--ink);
+  border-radius: 17px;
+  box-shadow: 0 4px 0 var(--ink);
+  color: var(--ink);
+  text-align: center;
+}
+.home-mode-tile:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 var(--ink); }
+.tile-levels { background: var(--a); }
+.tile-chrono { background: var(--h); }
+.tile-daily { background: var(--g); }
+.tile-daily:disabled { cursor: not-allowed; }
+.home-mode-icon { display: grid; min-height: 23px; place-items: center; font-size: 21px; font-weight: 800; line-height: 1; }
+.home-mode-icon svg { width: 21px; height: 21px; }
+.home-mode-tile strong { font-size: 14px; font-weight: 800; line-height: 1.05; overflow-wrap: anywhere; }
+.home-mode-tile small { max-width: 100%; color: var(--ink); font-size: 10px; font-weight: 700; line-height: 1.05; overflow-wrap: anywhere; }
+.home-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.home-chip {
+  display: flex;
+  min-width: 0;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+.home-chip:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--ink); }
+.home-chip > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.home-chip small { color: var(--mut); font-size: 11px; font-weight: 800; white-space: nowrap; }
+
 .stat-tile {
   display: flex;
   min-width: 0;
@@ -392,7 +454,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   color: var(--ct);
 }
 
-.home.page-shell { width: min(100%, 480px); padding: 0 0 18px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.home.page-shell { width: min(100%, 920px); padding: 0 0 18px; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
 .setup-page, .list-page, .result-page { align-self: flex-start; }
 .page-shell h1 { margin: 4px 0 8px; font-size: clamp(28px, 7vw, 36px); font-weight: 800; line-height: 1.05; }
 .eyebrow { margin: 0; color: var(--mut); font-size: 14px; font-weight: 700; }
@@ -629,6 +691,12 @@ html[data-theme='soleil'] .question-timer:not(.is-low) div { background: var(--g
 
 @media (min-width: 768px) {
   .question-area .question-text { font-size: clamp(80px, 7vw, 88px); }
+}
+
+@media (min-width: 900px) {
+  .home-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 18px; }
+  .warmup-card { padding: 20px 18px 16px; }
+  .warmup-question { font-size: clamp(60px, 5vw, 64px); }
 }
 
 @media (max-width: 390px) {

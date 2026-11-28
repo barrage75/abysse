@@ -48,6 +48,8 @@ const en = {
   },
   home: {
     tagline: 'The mental math lab',
+    warmupLabel: "Warm-up · doesn't count toward scores",
+    warmupStreak: (count: number) => `${count} in a row`,
     modesAria: 'Game modes',
     levelLabel: 'Levels',
     levelBest: (score: string) => `Best ${score}`,

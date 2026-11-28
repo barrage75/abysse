@@ -53,6 +53,8 @@ const fr = {
   },
   home: {
     tagline: 'Le labo de calcul mental du professeur Poulpe',
+    warmupLabel: 'Échauffement · ne compte pas dans les scores',
+    warmupStreak: (count: number) => `${count} d'affilée`,
     modesAria: 'Modes de jeu',
     levelLabel: 'Niveaux',
     levelBest: (score: string) => `Record ${score}`,
