@@ -459,6 +459,7 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 .page-shell h1 { margin: 4px 0 8px; font-size: clamp(28px, 7vw, 36px); font-weight: 800; line-height: 1.05; }
 .eyebrow { margin: 0; color: var(--mut); font-size: 14px; font-weight: 700; }
 .page-intro { margin: 0 0 16px; color: var(--mut); line-height: 1.3; }
+.setup-page .setup-start { min-height: 56px; font-size: 20px; }
 
 .back-button {
   min-height: 44px;
@@ -475,6 +476,28 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 
 .back-button:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
 .level-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 16px 0; }
+.level-floor-list { display: grid; gap: 7px; margin: 14px 0; }
+.level-floor {
+  display: flex;
+  min-width: 0;
+  min-height: 54px;
+  align-items: center;
+  gap: 11px;
+  padding: 6px 10px;
+  border: 3px solid var(--ink);
+  border-radius: 15px;
+  background: var(--card);
+  box-shadow: 0 3px 0 var(--ink);
+  color: var(--ct);
+  text-align: left;
+}
+.level-floor.is-selected { background: var(--a); color: var(--ink); }
+.level-floor:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.level-floor-number { display: grid; width: 38px; min-width: 38px; height: 38px; place-items: center; border: 2px solid var(--ink); border-radius: 50%; background: var(--soft); color: var(--ct); font-size: 19px; font-weight: 800; }
+.level-floor-number.is-selected { background: var(--ink); color: var(--card); }
+.level-floor-copy { display: grid; min-width: 0; }
+.level-floor-copy strong { font-size: 16px; font-weight: 800; line-height: 1.05; }
+.level-floor-copy small { color: var(--mut); font-size: 12px; font-weight: 700; }
 
 .level-option {
   display: grid;
